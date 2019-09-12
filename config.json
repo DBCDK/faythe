@@ -1,0 +1,25 @@
+{
+  "vault_monitor_configs": [{
+    "role_id_path": "role-id",
+    "secret_id_path": "secret-id",
+    "vault_addr": "https://vault.example.com:8200",
+    "key_prefix": "platform-vault-secrets/letsencrypt/staging",
+    "specs": [{
+      "name": "jth-test",
+      "cn": "jth.faythe-test.acme.example.com",
+      "sans": [
+        "san1.jth.faythe-test.acme.example.com",
+        "san2.jth.faythe-test.acme.example.com"
+      ]
+    }]
+  }],
+   "lets_encrypt_url": "https://acme-staging-v02.api.letsencrypt.org/directory",
+   "lets_encrypt_email": "le@example.com",
+   "zones": {
+      "acme.example.com": {
+        "server": "ns.example.com",
+        "key": "acme.example.com.key"
+      }
+    },
+   "val_dns_servers": ["8.8.8.8", "8.8.4.4"]
+}

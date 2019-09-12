@@ -1,0 +1,53 @@
+name: "Bump-O-Matic"
+
+on:
+  schedule:
+    - cron: "0 12 * * MON"
+  # To allow for manual triggering:
+  workflow_dispatch:
+
+jobs:
+  bump-o-matic:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2.3.4
+    - uses: cachix/install-nix-action@v12
+    - name: Update dependencies
+      run: |
+        nix --experimental-features "nix-command flakes" flake update
+        nix-shell --run "cargo update"
+        nix-shell --run "crate2nix generate -n 'throw \"nixpkgs: mandatory arg\"' -f Cargo.toml"
+    - name: Create pull request
+      id: pr
+      uses: peter-evans/create-pull-request@v3.10.0
+      with:
+        token: ${{secrets.PAT_BUMP_O_MATIC}}
+        commit-message: "bump-o-matic: update dependencies"
+        branch: bump-o-matic
+        delete-branch: true
+        title: "Bump-O-Matic: Update dependencies"
+        body: "Update dependencies."
+    - name: Enable auto-merge and approve PR
+      uses: actions/github-script@v3
+      if: ${{steps.pr.outputs.pull-request-operation != 'closed'}}
+      with:
+        github-token: ${{secrets.PAT_BUMP_O_MATIC}}
+        script: |
+          const res = await github.graphql(`query {
+            repository(owner: "${context.repo.owner}", name: "${context.repo.repo}") {
+              pullRequest(number: ${{steps.pr.outputs.pull-request-number}}) {
+                id
+              }
+            }
+          }`)
+          await github.graphql(`mutation {
+            enablePullRequestAutoMerge(input: {pullRequestId:"${res.repository.pullRequest.id}"}) {
+              clientMutationId
+            }
+          }`)
+          await github.pulls.createReview({
+            pull_number: ${{steps.pr.outputs.pull-request-number}},
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            event: "APPROVE",
+          })
