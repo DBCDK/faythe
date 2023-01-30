@@ -12,14 +12,17 @@
     system = "x86_64-linux";
     pkgs = import nixpkgs {
       inherit system;
-      overlays = [];
+      overlays = [ self.overlays.default ];
     };
   in {
-    packages.${system}.${pname} = (import ./Cargo.nix {
-      inherit pkgs;
-    }).rootCrate.build;
+    packages.${system}.${pname} = pkgs.${pname};
+    defaultPackage.${system} = pkgs.${pname};
 
-    defaultPackage.${system} = self.packages.${system}.${pname};
+    overlays.default = final: prev: {
+      "${pname}" = (import ./Cargo.nix {
+        pkgs = final;
+      }).rootCrate.build;
+    };
 
     devShell.${system} = with pkgs; mkShell {
       buildInputs = [
