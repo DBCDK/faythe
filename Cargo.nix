@@ -132,7 +132,7 @@ rec {
           }
           {
             name = "time";
-            packageId = "time";
+            packageId = "time 0.1.45";
           }
         ];
 
@@ -523,21 +523,6 @@ rec {
         };
         resolvedDefaultFeatures = [ "either" ];
       };
-      "bytes 0.5.6" = rec {
-        crateName = "bytes";
-        version = "0.5.6";
-        edition = "2018";
-        sha256 = "0f5s7xq6qzmdh22ygsy8v0sp02m51y0radvq4i4y8cizy1lfqk0f";
-        authors = [
-          "Carl Lerche <me@carllerche.com>"
-          "Sean McArthur <sean@seanmonstar.com>"
-        ];
-        features = {
-          "default" = [ "std" ];
-          "serde" = [ "dep:serde" ];
-        };
-        resolvedDefaultFeatures = [ "default" "std" ];
-      };
       "bytes 1.4.0" = rec {
         crateName = "bytes";
         version = "1.4.0";
@@ -625,7 +610,7 @@ rec {
           }
           {
             name = "time";
-            packageId = "time";
+            packageId = "time 0.1.45";
             optional = true;
           }
           {
@@ -780,7 +765,7 @@ rec {
         dependencies = [
           {
             name = "time";
-            packageId = "time";
+            packageId = "time 0.1.45";
           }
           {
             name = "url";
@@ -839,7 +824,7 @@ rec {
           }
           {
             name = "time";
-            packageId = "time";
+            packageId = "time 0.1.45";
           }
           {
             name = "try_from";
@@ -1066,9 +1051,9 @@ rec {
       };
       "cxx" = rec {
         crateName = "cxx";
-        version = "1.0.89";
+        version = "1.0.90";
         edition = "2018";
-        sha256 = "1s84camr1hmbwvk6zydy0ycsm1x577k9ax9idr1rbm1dlgk1x0xw";
+        sha256 = "1s55jw5nmap8hnziqispb66abskhcqpj8nk08172ns1arnd9vmch";
         authors = [
           "David Tolnay <dtolnay@gmail.com>"
         ];
@@ -1104,9 +1089,9 @@ rec {
       };
       "cxx-build" = rec {
         crateName = "cxx-build";
-        version = "1.0.89";
+        version = "1.0.90";
         edition = "2018";
-        sha256 = "17bq8ri81w1zpw4gvldlvjkhb7ggmbmgfj8hv1f8ka5iy5a1scwl";
+        sha256 = "0f1s8mm7dlvkgjvvj5xhavm9pwdgn2ickx359s35rparlsyl1ypb";
         authors = [
           "David Tolnay <dtolnay@gmail.com>"
         ];
@@ -1151,9 +1136,9 @@ rec {
       };
       "cxxbridge-flags" = rec {
         crateName = "cxxbridge-flags";
-        version = "1.0.89";
+        version = "1.0.90";
         edition = "2018";
-        sha256 = "12pb3wzdjqfkvrjlbmzfp3dkbn133yb3jjsbdq6v9aacl5dx7p28";
+        sha256 = "00yw155f72g8pnwqyzfskfapzblajmdr59mxrmpdqw2wgisycz25";
         authors = [
           "David Tolnay <dtolnay@gmail.com>"
         ];
@@ -1163,9 +1148,9 @@ rec {
       };
       "cxxbridge-macro" = rec {
         crateName = "cxxbridge-macro";
-        version = "1.0.89";
+        version = "1.0.90";
         edition = "2018";
-        sha256 = "1li4a5phyrqjns85jisik39f11kj3bg4lcm3hb6pqh4bg4lypfw1";
+        sha256 = "0qr2gwpnp74pd0nfbs2f1la7rx8rxr48ccvv5bmjlyydmavq7y7b";
         procMacro = true;
         authors = [
           "David Tolnay <dtolnay@gmail.com>"
@@ -1196,9 +1181,9 @@ rec {
       };
       "darling" = rec {
         crateName = "darling";
-        version = "0.14.2";
+        version = "0.14.3";
         edition = "2018";
-        sha256 = "1yhdamhqy4jcy7xsq1vdvf1xhgbzzv65lviac5vaidf61p93rpdh";
+        sha256 = "1a4zrsznwawimsi8yy27k0v36xamjwsf251s255b87v7v0dqx060";
         authors = [
           "Ted Driggs <ted.driggs@outlook.com>"
         ];
@@ -1221,9 +1206,9 @@ rec {
       };
       "darling_core" = rec {
         crateName = "darling_core";
-        version = "0.14.2";
+        version = "0.14.3";
         edition = "2018";
-        sha256 = "17w5fbwyj0vsk6pj5rm2cbyl3fi242dy42xz8qbm163wmz6d5157";
+        sha256 = "1jwjwlfjpbjj64js864rnakgkp32v9ak8a9g1krr7q989x280780";
         authors = [
           "Ted Driggs <ted.driggs@outlook.com>"
         ];
@@ -1263,9 +1248,9 @@ rec {
       };
       "darling_macro" = rec {
         crateName = "darling_macro";
-        version = "0.14.2";
+        version = "0.14.3";
         edition = "2018";
-        sha256 = "0zmb5awifqajh43m9mmd7flrpzwxm2q05m1dc9a2ch790wj8263n";
+        sha256 = "11b6llzgvqq69l4f47glmy6j1acri8nzflbg3knffp9di9ck0qmk";
         procMacro = true;
         authors = [
           "Ted Driggs <ted.driggs@outlook.com>"
@@ -1285,6 +1270,20 @@ rec {
           }
         ];
 
+      };
+      "data-encoding" = rec {
+        crateName = "data-encoding";
+        version = "2.3.3";
+        edition = "2018";
+        sha256 = "1yq8jnivxsjzl3mjbjdjg5kfvd17wawbmg1jvsfw6cqmn1n6dn13";
+        authors = [
+          "Julien Cretin <git@ia0.eu>"
+        ];
+        features = {
+          "default" = [ "std" ];
+          "std" = [ "alloc" ];
+        };
+        resolvedDefaultFeatures = [ "alloc" "default" "std" ];
       };
       "dbc-rust-modules" = rec {
         crateName = "dbc-rust-modules";
@@ -1480,9 +1479,9 @@ rec {
       };
       "enum-as-inner" = rec {
         crateName = "enum-as-inner";
-        version = "0.3.4";
+        version = "0.5.1";
         edition = "2018";
-        sha256 = "1m2l8zh0yd7i95qkyha86ca8m0bnhfimv38dr3n4p41yh6di03ap";
+        sha256 = "05m1frlkgrikja714zxb97i00rhj36zlifiwiby7ymkx0jx0nwn9";
         procMacro = true;
         authors = [
           "Benjamin Fry <benjaminfry@me.com>"
@@ -1507,7 +1506,50 @@ rec {
         ];
 
       };
-      "env_logger" = rec {
+      "env_logger 0.10.0" = rec {
+        crateName = "env_logger";
+        version = "0.10.0";
+        edition = "2021";
+        sha256 = "1w797qgkrmqdacsbc0j6yvpnmvfc9lx6k8fm79rndkxci5mapkc5";
+        dependencies = [
+          {
+            name = "humantime";
+            packageId = "humantime 2.1.0";
+            optional = true;
+          }
+          {
+            name = "is-terminal";
+            packageId = "is-terminal";
+            optional = true;
+          }
+          {
+            name = "log";
+            packageId = "log";
+            features = [ "std" ];
+          }
+          {
+            name = "regex";
+            packageId = "regex";
+            optional = true;
+            usesDefaultFeatures = false;
+            features = [ "std" "perf" ];
+          }
+          {
+            name = "termcolor";
+            packageId = "termcolor";
+            optional = true;
+          }
+        ];
+        features = {
+          "auto-color" = [ "dep:is-terminal" "color" ];
+          "color" = [ "dep:termcolor" ];
+          "default" = [ "auto-color" "humantime" "regex" ];
+          "humantime" = [ "dep:humantime" ];
+          "regex" = [ "dep:regex" ];
+        };
+        resolvedDefaultFeatures = [ "auto-color" "color" "default" "humantime" "regex" ];
+      };
+      "env_logger 0.7.1" = rec {
         crateName = "env_logger";
         version = "0.7.1";
         edition = "2018";
@@ -1523,7 +1565,7 @@ rec {
           }
           {
             name = "humantime";
-            packageId = "humantime";
+            packageId = "humantime 1.3.0";
             optional = true;
           }
           {
@@ -1572,6 +1614,69 @@ rec {
           "std" = [ "serde/std" ];
         };
         resolvedDefaultFeatures = [ "default" "std" ];
+      };
+      "errno" = rec {
+        crateName = "errno";
+        version = "0.2.8";
+        edition = "2015";
+        sha256 = "18cnqgk8r6lq1n5cfy3bryiyz9zkqr10dxj49sa3fkzfamih8fgn";
+        authors = [
+          "Chris Wong <lambda.fairy@gmail.com>"
+        ];
+        dependencies = [
+          {
+            name = "errno-dragonfly";
+            packageId = "errno-dragonfly";
+            target = { target, features }: (target."os" == "dragonfly");
+          }
+          {
+            name = "libc";
+            packageId = "libc";
+            target = { target, features }: (target."os" == "hermit");
+          }
+          {
+            name = "libc";
+            packageId = "libc";
+            target = { target, features }: (target."os" == "wasi");
+          }
+          {
+            name = "libc";
+            packageId = "libc";
+            target = { target, features }: (target."unix" or false);
+          }
+          {
+            name = "winapi";
+            packageId = "winapi 0.3.9";
+            target = { target, features }: (target."windows" or false);
+            features = [ "errhandlingapi" "minwindef" "ntdef" "winbase" ];
+          }
+        ];
+        features = {
+          "default" = [ "std" ];
+        };
+      };
+      "errno-dragonfly" = rec {
+        crateName = "errno-dragonfly";
+        version = "0.1.2";
+        edition = "2018";
+        sha256 = "1grrmcm6q8512hkq5yzch3yv8wafflc2apbmsaabiyk44yqz2s5a";
+        authors = [
+          "Michael Neumann <mneumann@ntecs.de>"
+        ];
+        dependencies = [
+          {
+            name = "libc";
+            packageId = "libc";
+            usesDefaultFeatures = false;
+          }
+        ];
+        buildDependencies = [
+          {
+            name = "cc";
+            packageId = "cc";
+          }
+        ];
+
       };
       "failure" = rec {
         crateName = "failure";
@@ -1676,7 +1781,7 @@ rec {
           }
           {
             name = "base64";
-            packageId = "base64 0.10.1";
+            packageId = "base64 0.21.0";
           }
           {
             name = "chrono";
@@ -1692,7 +1797,7 @@ rec {
           }
           {
             name = "env_logger";
-            packageId = "env_logger";
+            packageId = "env_logger 0.10.0";
           }
           {
             name = "lazy_static";
@@ -1729,7 +1834,7 @@ rec {
           }
           {
             name = "time";
-            packageId = "time";
+            packageId = "time 0.3.17";
           }
           {
             name = "tokio";
@@ -1899,7 +2004,7 @@ rec {
         ];
 
       };
-      "futures 0.1.31" = rec {
+      "futures" = rec {
         crateName = "futures";
         version = "0.1.31";
         edition = "2015";
@@ -1912,61 +2017,6 @@ rec {
         };
         resolvedDefaultFeatures = [ "default" "use_std" "with-deprecated" ];
       };
-      "futures 0.3.26" = rec {
-        crateName = "futures";
-        version = "0.3.26";
-        edition = "2018";
-        sha256 = "115z5bqihd2jq75s8n7jxy4k83kpv67vhic4snch6d7h1wmpkqhk";
-        dependencies = [
-          {
-            name = "futures-channel";
-            packageId = "futures-channel";
-            usesDefaultFeatures = false;
-            features = [ "sink" ];
-          }
-          {
-            name = "futures-core";
-            packageId = "futures-core";
-            usesDefaultFeatures = false;
-          }
-          {
-            name = "futures-io";
-            packageId = "futures-io";
-            usesDefaultFeatures = false;
-          }
-          {
-            name = "futures-sink";
-            packageId = "futures-sink";
-            usesDefaultFeatures = false;
-          }
-          {
-            name = "futures-task";
-            packageId = "futures-task";
-            usesDefaultFeatures = false;
-          }
-          {
-            name = "futures-util";
-            packageId = "futures-util";
-            usesDefaultFeatures = false;
-            features = [ "sink" ];
-          }
-        ];
-        features = {
-          "alloc" = [ "futures-core/alloc" "futures-task/alloc" "futures-sink/alloc" "futures-channel/alloc" "futures-util/alloc" ];
-          "async-await" = [ "futures-util/async-await" "futures-util/async-await-macro" ];
-          "bilock" = [ "futures-util/bilock" ];
-          "compat" = [ "std" "futures-util/compat" ];
-          "default" = [ "std" "async-await" "executor" ];
-          "executor" = [ "std" "futures-executor/std" ];
-          "futures-executor" = [ "dep:futures-executor" ];
-          "io-compat" = [ "compat" "futures-util/io-compat" ];
-          "std" = [ "alloc" "futures-core/std" "futures-task/std" "futures-io/std" "futures-sink/std" "futures-util/std" "futures-util/io" "futures-util/channel" ];
-          "thread-pool" = [ "executor" "futures-executor/thread-pool" ];
-          "unstable" = [ "futures-core/unstable" "futures-task/unstable" "futures-channel/unstable" "futures-io/unstable" "futures-util/unstable" ];
-          "write-all-vectored" = [ "futures-util/write-all-vectored" ];
-        };
-        resolvedDefaultFeatures = [ "alloc" "std" ];
-      };
       "futures-channel" = rec {
         crateName = "futures-channel";
         version = "0.3.26";
@@ -1978,12 +2028,6 @@ rec {
             packageId = "futures-core";
             usesDefaultFeatures = false;
           }
-          {
-            name = "futures-sink";
-            packageId = "futures-sink";
-            optional = true;
-            usesDefaultFeatures = false;
-          }
         ];
         features = {
           "alloc" = [ "futures-core/alloc" ];
@@ -1992,7 +2036,7 @@ rec {
           "sink" = [ "futures-sink" ];
           "std" = [ "alloc" "futures-core/std" ];
         };
-        resolvedDefaultFeatures = [ "alloc" "default" "futures-sink" "sink" "std" ];
+        resolvedDefaultFeatures = [ "alloc" "default" "std" ];
       };
       "futures-core" = rec {
         crateName = "futures-core";
@@ -2017,7 +2061,7 @@ rec {
         dependencies = [
           {
             name = "futures";
-            packageId = "futures 0.1.31";
+            packageId = "futures";
             usesDefaultFeatures = false;
             features = [ "use_std" ];
           }
@@ -2094,33 +2138,13 @@ rec {
         sha256 = "1lbvdf6hq62yczd87glm6ih8h5qkagsl7xdiwhmqvwzymkins7cw";
         dependencies = [
           {
-            name = "futures-channel";
-            packageId = "futures-channel";
-            optional = true;
-            usesDefaultFeatures = false;
-            features = [ "std" ];
-          }
-          {
             name = "futures-core";
             packageId = "futures-core";
             usesDefaultFeatures = false;
           }
           {
-            name = "futures-io";
-            packageId = "futures-io";
-            optional = true;
-            usesDefaultFeatures = false;
-            features = [ "std" ];
-          }
-          {
             name = "futures-macro";
             packageId = "futures-macro";
-            optional = true;
-            usesDefaultFeatures = false;
-          }
-          {
-            name = "futures-sink";
-            packageId = "futures-sink";
             optional = true;
             usesDefaultFeatures = false;
           }
@@ -2130,13 +2154,8 @@ rec {
             usesDefaultFeatures = false;
           }
           {
-            name = "memchr";
-            packageId = "memchr";
-            optional = true;
-          }
-          {
             name = "pin-project-lite";
-            packageId = "pin-project-lite 0.2.9";
+            packageId = "pin-project-lite";
           }
           {
             name = "pin-utils";
@@ -2170,47 +2189,9 @@ rec {
           "unstable" = [ "futures-core/unstable" "futures-task/unstable" ];
           "write-all-vectored" = [ "io" ];
         };
-        resolvedDefaultFeatures = [ "alloc" "async-await" "async-await-macro" "channel" "default" "futures-channel" "futures-io" "futures-macro" "futures-sink" "io" "memchr" "sink" "slab" "std" ];
+        resolvedDefaultFeatures = [ "alloc" "async-await" "async-await-macro" "default" "futures-macro" "slab" "std" ];
       };
-      "getrandom 0.1.16" = rec {
-        crateName = "getrandom";
-        version = "0.1.16";
-        edition = "2018";
-        sha256 = "1kjzmz60qx9mn615ks1akjbf36n3lkv27zfwbcam0fzmj56wphwg";
-        authors = [
-          "The Rand Project Developers"
-        ];
-        dependencies = [
-          {
-            name = "cfg-if";
-            packageId = "cfg-if 1.0.0";
-          }
-          {
-            name = "libc";
-            packageId = "libc";
-            usesDefaultFeatures = false;
-            target = { target, features }: (target."unix" or false);
-          }
-          {
-            name = "wasi";
-            packageId = "wasi 0.9.0+wasi-snapshot-preview1";
-            target = { target, features }: (target."os" == "wasi");
-          }
-        ];
-        features = {
-          "bindgen" = [ "dep:bindgen" ];
-          "compiler_builtins" = [ "dep:compiler_builtins" ];
-          "core" = [ "dep:core" ];
-          "js-sys" = [ "dep:js-sys" ];
-          "log" = [ "dep:log" ];
-          "rustc-dep-of-std" = [ "compiler_builtins" "core" ];
-          "stdweb" = [ "dep:stdweb" ];
-          "test-in-browser" = [ "wasm-bindgen" ];
-          "wasm-bindgen" = [ "bindgen" "js-sys" ];
-        };
-        resolvedDefaultFeatures = [ "std" ];
-      };
-      "getrandom 0.2.8" = rec {
+      "getrandom" = rec {
         crateName = "getrandom";
         version = "0.2.8";
         edition = "2018";
@@ -2243,6 +2224,7 @@ rec {
           "rustc-dep-of-std" = [ "compiler_builtins" "core" "libc/rustc-dep-of-std" "wasi/rustc-dep-of-std" ];
           "wasm-bindgen" = [ "dep:wasm-bindgen" ];
         };
+        resolvedDefaultFeatures = [ "std" ];
       };
       "gimli" = rec {
         crateName = "gimli";
@@ -2288,7 +2270,7 @@ rec {
           }
           {
             name = "futures";
-            packageId = "futures 0.1.31";
+            packageId = "futures";
           }
           {
             name = "http";
@@ -2472,6 +2454,22 @@ rec {
         };
         resolvedDefaultFeatures = [ "default" ];
       };
+      "hermit-abi 0.3.1" = rec {
+        crateName = "hermit-abi";
+        version = "0.3.1";
+        edition = "2021";
+        sha256 = "11j2v3q58kmi5mhjvh6hfrb7il2yzg7gmdf5lpwnwwv6qj04im7y";
+        authors = [
+          "Stefan Lankes"
+        ];
+        features = {
+          "alloc" = [ "dep:alloc" ];
+          "compiler_builtins" = [ "dep:compiler_builtins" ];
+          "core" = [ "dep:core" ];
+          "rustc-dep-of-std" = [ "core" "alloc" "compiler_builtins/rustc-dep-of-std" ];
+        };
+        resolvedDefaultFeatures = [ "default" ];
+      };
       "hostname" = rec {
         crateName = "hostname";
         version = "0.3.1";
@@ -2569,7 +2567,7 @@ rec {
           }
           {
             name = "futures";
-            packageId = "futures 0.1.31";
+            packageId = "futures";
           }
           {
             name = "http";
@@ -2604,7 +2602,7 @@ rec {
           }
           {
             name = "pin-project-lite";
-            packageId = "pin-project-lite 0.2.9";
+            packageId = "pin-project-lite";
           }
         ];
 
@@ -2632,7 +2630,7 @@ rec {
         ];
 
       };
-      "humantime" = rec {
+      "humantime 1.3.0" = rec {
         crateName = "humantime";
         version = "1.3.0";
         edition = "2015";
@@ -2645,6 +2643,16 @@ rec {
             name = "quick-error";
             packageId = "quick-error";
           }
+        ];
+
+      };
+      "humantime 2.1.0" = rec {
+        crateName = "humantime";
+        version = "2.1.0";
+        edition = "2018";
+        sha256 = "1r55pfkkf5v0ji1x6izrjwdq9v6sc7bv99xj6srywcar37xmnfls";
+        authors = [
+          "Paul Colomiets <paul@colomiets.name>"
         ];
 
       };
@@ -2663,7 +2671,7 @@ rec {
           }
           {
             name = "futures";
-            packageId = "futures 0.1.31";
+            packageId = "futures";
           }
           {
             name = "futures-cpupool";
@@ -2705,7 +2713,7 @@ rec {
           }
           {
             name = "time";
-            packageId = "time";
+            packageId = "time 0.1.45";
           }
           {
             name = "tokio";
@@ -2826,11 +2834,11 @@ rec {
           }
           {
             name = "pin-project-lite";
-            packageId = "pin-project-lite 0.2.9";
+            packageId = "pin-project-lite";
           }
           {
             name = "socket2";
-            packageId = "socket2 0.4.7";
+            packageId = "socket2";
             optional = true;
             features = [ "all" ];
           }
@@ -3030,7 +3038,7 @@ rec {
           }
           {
             name = "futures";
-            packageId = "futures 0.1.31";
+            packageId = "futures";
           }
           {
             name = "hyper";
@@ -3247,6 +3255,43 @@ rec {
           "web-sys" = [ "dep:web-sys" ];
         };
       };
+      "io-lifetimes" = rec {
+        crateName = "io-lifetimes";
+        version = "1.0.5";
+        edition = "2018";
+        sha256 = "1cqg2zy012r0l3l772mjh45m11jm0ybw7bgqgwk8308gvnhbgghs";
+        authors = [
+          "Dan Gohman <dev@sunfishcode.online>"
+        ];
+        dependencies = [
+          {
+            name = "libc";
+            packageId = "libc";
+            optional = true;
+            target = { target, features }: (!(target."windows" or false));
+          }
+          {
+            name = "windows-sys";
+            packageId = "windows-sys 0.45.0";
+            optional = true;
+            target = { target, features }: (target."windows" or false);
+            features = [ "Win32_Foundation" "Win32_Storage_FileSystem" "Win32_Networking_WinSock" "Win32_Security" "Win32_System_IO" "Win32_System_Threading" ];
+          }
+        ];
+        features = {
+          "async-std" = [ "dep:async-std" ];
+          "close" = [ "libc" "windows-sys" ];
+          "default" = [ "close" ];
+          "fs-err" = [ "dep:fs-err" ];
+          "libc" = [ "dep:libc" ];
+          "mio" = [ "dep:mio" ];
+          "os_pipe" = [ "dep:os_pipe" ];
+          "socket2" = [ "dep:socket2" ];
+          "tokio" = [ "dep:tokio" ];
+          "windows-sys" = [ "dep:windows-sys" ];
+        };
+        resolvedDefaultFeatures = [ "close" "default" "libc" "windows-sys" ];
+      };
       "iovec" = rec {
         crateName = "iovec";
         version = "0.1.4";
@@ -3266,16 +3311,16 @@ rec {
       };
       "ipconfig" = rec {
         crateName = "ipconfig";
-        version = "0.2.2";
+        version = "0.3.1";
         edition = "2018";
-        sha256 = "1mzsagc6bk3i3fpggqlq8am5rxn4hgs297rsaya90w79xj5g3qpp";
+        sha256 = "1gn5j5sp58mz0630dhs1b8by7j0jqagldbd5iyln690gp7qjlc5x";
         authors = [
           "Liran Ringel <liranringel@gmail.com>"
         ];
         dependencies = [
           {
             name = "socket2";
-            packageId = "socket2 0.3.19";
+            packageId = "socket2";
             target = { target, features }: (target."windows" or false);
           }
           {
@@ -3290,11 +3335,17 @@ rec {
           }
           {
             name = "winreg";
-            packageId = "winreg 0.6.2";
+            packageId = "winreg 0.10.1";
+            optional = true;
             target = { target, features }: (target."windows" or false);
           }
         ];
-
+        features = {
+          "computer" = [ "winreg" ];
+          "default" = [ "computer" ];
+          "winreg" = [ "dep:winreg" ];
+        };
+        resolvedDefaultFeatures = [ "computer" "default" "winreg" ];
       };
       "ipnet" = rec {
         crateName = "ipnet";
@@ -3310,6 +3361,40 @@ rec {
           "serde" = [ "dep:serde" ];
         };
         resolvedDefaultFeatures = [ "default" ];
+      };
+      "is-terminal" = rec {
+        crateName = "is-terminal";
+        version = "0.4.3";
+        edition = "2018";
+        sha256 = "1vys14pmfafcr7m5sf52lj4gjimwylmrf8yvsrryjvym8l58pq92";
+        authors = [
+          "softprops <d.tangren@gmail.com>"
+          "Dan Gohman <dev@sunfishcode.online>"
+        ];
+        dependencies = [
+          {
+            name = "hermit-abi";
+            packageId = "hermit-abi 0.3.1";
+            target = { target, features }: (target."os" == "hermit");
+          }
+          {
+            name = "io-lifetimes";
+            packageId = "io-lifetimes";
+          }
+          {
+            name = "rustix";
+            packageId = "rustix";
+            target = { target, features }: (!((target."windows" or false) || (target."os" == "hermit") || (target."os" == "unknown")));
+            features = [ "termios" ];
+          }
+          {
+            name = "windows-sys";
+            packageId = "windows-sys 0.45.0";
+            target = { target, features }: (target."windows" or false);
+            features = [ "Win32_Foundation" "Win32_Storage_FileSystem" "Win32_System_Console" ];
+          }
+        ];
+
       };
       "itoa 0.4.8" = rec {
         crateName = "itoa";
@@ -3402,7 +3487,7 @@ rec {
           "rustc-std-workspace-core" = [ "dep:rustc-std-workspace-core" ];
           "use_std" = [ "std" ];
         };
-        resolvedDefaultFeatures = [ "align" "default" "std" ];
+        resolvedDefaultFeatures = [ "default" "extra_traits" "std" ];
       };
       "link-cplusplus" = rec {
         crateName = "link-cplusplus";
@@ -3439,6 +3524,22 @@ rec {
           "serde" = [ "dep:serde" ];
           "serde_impl" = [ "serde" ];
         };
+      };
+      "linux-raw-sys" = rec {
+        crateName = "linux-raw-sys";
+        version = "0.1.4";
+        edition = "2018";
+        sha256 = "1926520si5wkn4m6iz6ka97ya5q1dgr8ib3fd705fscfgixgflgh";
+        authors = [
+          "Dan Gohman <dev@sunfishcode.online>"
+        ];
+        features = {
+          "compiler_builtins" = [ "dep:compiler_builtins" ];
+          "core" = [ "dep:core" ];
+          "default" = [ "std" "general" "errno" ];
+          "rustc-dep-of-std" = [ "core" "compiler_builtins" "no_std" ];
+        };
+        resolvedDefaultFeatures = [ "errno" "general" "ioctl" "no_std" ];
       };
       "lock_api 0.3.4" = rec {
         crateName = "lock_api";
@@ -4522,17 +4623,7 @@ rec {
         };
         resolvedDefaultFeatures = [ "alloc" "default" ];
       };
-      "pin-project-lite 0.1.12" = rec {
-        crateName = "pin-project-lite";
-        version = "0.1.12";
-        edition = "2018";
-        sha256 = "0xx7f3wzc8ydvd1v2mmrxfypjchp52bphrirf08phbq8ba8n8yr5";
-        authors = [
-          "Taiki Endo <te316e89@gmail.com>"
-        ];
-
-      };
-      "pin-project-lite 0.2.9" = rec {
+      "pin-project-lite" = rec {
         crateName = "pin-project-lite";
         version = "0.2.9";
         edition = "2018";
@@ -4607,7 +4698,7 @@ rec {
           }
           {
             name = "env_logger";
-            packageId = "env_logger";
+            packageId = "env_logger 0.7.1";
           }
           {
             name = "http";
@@ -4736,7 +4827,7 @@ rec {
           }
           {
             name = "rand_hc";
-            packageId = "rand_hc 0.1.0";
+            packageId = "rand_hc";
           }
           {
             name = "rand_isaac";
@@ -4787,22 +4878,16 @@ rec {
         };
         resolvedDefaultFeatures = [ "alloc" "default" "rand_os" "std" ];
       };
-      "rand 0.7.3" = rec {
+      "rand 0.8.5" = rec {
         crateName = "rand";
-        version = "0.7.3";
+        version = "0.8.5";
         edition = "2018";
-        sha256 = "00sdaimkbz491qgi6qxkv582yivl32m2jd401kzbn94vsiwicsva";
+        sha256 = "013l6931nn7gkc23jz5mm3qdhf93jjf0fg64nz2lp4i51qd8vbrl";
         authors = [
           "The Rand Project Developers"
           "The Rust Project Developers"
         ];
         dependencies = [
-          {
-            name = "getrandom";
-            packageId = "getrandom 0.1.16";
-            rename = "getrandom_package";
-            optional = true;
-          }
           {
             name = "libc";
             packageId = "libc";
@@ -4812,43 +4897,30 @@ rec {
           }
           {
             name = "rand_chacha";
-            packageId = "rand_chacha 0.2.2";
+            packageId = "rand_chacha 0.3.1";
+            optional = true;
             usesDefaultFeatures = false;
-            target = { target, features }: (!(target."os" == "emscripten"));
           }
           {
             name = "rand_core";
-            packageId = "rand_core 0.5.1";
-          }
-          {
-            name = "rand_hc";
-            packageId = "rand_hc 0.2.0";
-            target = { target, features }: (target."os" == "emscripten");
-          }
-        ];
-        devDependencies = [
-          {
-            name = "rand_hc";
-            packageId = "rand_hc 0.2.0";
+            packageId = "rand_core 0.6.4";
           }
         ];
         features = {
           "alloc" = [ "rand_core/alloc" ];
-          "default" = [ "std" ];
-          "getrandom" = [ "getrandom_package" "rand_core/getrandom" ];
-          "getrandom_package" = [ "dep:getrandom_package" ];
+          "default" = [ "std" "std_rng" ];
+          "getrandom" = [ "rand_core/getrandom" ];
           "libc" = [ "dep:libc" ];
           "log" = [ "dep:log" ];
-          "nightly" = [ "simd_support" ];
           "packed_simd" = [ "dep:packed_simd" ];
-          "rand_pcg" = [ "dep:rand_pcg" ];
+          "rand_chacha" = [ "dep:rand_chacha" ];
+          "serde" = [ "dep:serde" ];
+          "serde1" = [ "serde" "rand_core/serde1" ];
           "simd_support" = [ "packed_simd" ];
-          "small_rng" = [ "rand_pcg" ];
           "std" = [ "rand_core/std" "rand_chacha/std" "alloc" "getrandom" "libc" ];
-          "stdweb" = [ "getrandom_package/stdweb" ];
-          "wasm-bindgen" = [ "getrandom_package/wasm-bindgen" ];
+          "std_rng" = [ "rand_chacha" ];
         };
-        resolvedDefaultFeatures = [ "alloc" "default" "getrandom" "getrandom_package" "libc" "std" ];
+        resolvedDefaultFeatures = [ "alloc" "default" "getrandom" "libc" "rand_chacha" "std" "std_rng" ];
       };
       "rand_chacha 0.1.1" = rec {
         crateName = "rand_chacha";
@@ -4874,11 +4946,11 @@ rec {
         ];
 
       };
-      "rand_chacha 0.2.2" = rec {
+      "rand_chacha 0.3.1" = rec {
         crateName = "rand_chacha";
-        version = "0.2.2";
+        version = "0.3.1";
         edition = "2018";
-        sha256 = "00il36fkdbsmpr99p9ksmmp6dn1md7rmnwmz0rr77jbrca2yvj7l";
+        sha256 = "123x2adin558xbhvqb8w4f6syjsdkmqff8cxwhmjacpsl1ihmhg6";
         authors = [
           "The Rand Project Developers"
           "The Rust Project Developers"
@@ -4893,11 +4965,13 @@ rec {
           }
           {
             name = "rand_core";
-            packageId = "rand_core 0.5.1";
+            packageId = "rand_core 0.6.4";
           }
         ];
         features = {
-          "default" = [ "std" "simd" ];
+          "default" = [ "std" ];
+          "serde" = [ "dep:serde" ];
+          "serde1" = [ "serde" ];
           "std" = [ "ppv-lite86/std" ];
         };
         resolvedDefaultFeatures = [ "std" ];
@@ -4941,11 +5015,11 @@ rec {
         };
         resolvedDefaultFeatures = [ "alloc" "std" ];
       };
-      "rand_core 0.5.1" = rec {
+      "rand_core 0.6.4" = rec {
         crateName = "rand_core";
-        version = "0.5.1";
+        version = "0.6.4";
         edition = "2018";
-        sha256 = "06bdvx08v3rkz451cm7z59xwwqn1rkfh6v9ay77b14f8dwlybgch";
+        sha256 = "0b4j2v4cb5krak1pv6kakv4sz6xcwbrmy2zckc32hsigbrwy82zc";
         authors = [
           "The Rand Project Developers"
           "The Rust Project Developers"
@@ -4953,7 +5027,7 @@ rec {
         dependencies = [
           {
             name = "getrandom";
-            packageId = "getrandom 0.1.16";
+            packageId = "getrandom";
             optional = true;
           }
         ];
@@ -4965,7 +5039,7 @@ rec {
         };
         resolvedDefaultFeatures = [ "alloc" "getrandom" "std" ];
       };
-      "rand_hc 0.1.0" = rec {
+      "rand_hc" = rec {
         crateName = "rand_hc";
         version = "0.1.0";
         edition = "2015";
@@ -4978,22 +5052,6 @@ rec {
             name = "rand_core";
             packageId = "rand_core 0.3.1";
             usesDefaultFeatures = false;
-          }
-        ];
-
-      };
-      "rand_hc 0.2.0" = rec {
-        crateName = "rand_hc";
-        version = "0.2.0";
-        edition = "2018";
-        sha256 = "0g31sqwpmsirdlwr0svnacr4dbqyz339im4ssl9738cjgfpjjcfa";
-        authors = [
-          "The Rand Project Developers"
-        ];
-        dependencies = [
-          {
-            name = "rand_core";
-            packageId = "rand_core 0.5.1";
           }
         ];
 
@@ -5363,7 +5421,7 @@ rec {
           }
           {
             name = "pin-project-lite";
-            packageId = "pin-project-lite 0.2.9";
+            packageId = "pin-project-lite";
             target = { target, features }: (!(target."arch" == "wasm32"));
           }
           {
@@ -5553,7 +5611,7 @@ rec {
           }
           {
             name = "futures";
-            packageId = "futures 0.1.31";
+            packageId = "futures";
           }
           {
             name = "http";
@@ -5599,7 +5657,7 @@ rec {
           }
           {
             name = "time";
-            packageId = "time";
+            packageId = "time 0.1.45";
           }
           {
             name = "tokio";
@@ -5914,6 +5972,118 @@ rec {
           }
         ];
 
+      };
+      "rustix" = rec {
+        crateName = "rustix";
+        version = "0.36.8";
+        edition = "2018";
+        sha256 = "0i4npbvz7wa6c4kpnfr3izlhrzsnz87afi5v38y4k20r464bnfpl";
+        authors = [
+          "Dan Gohman <dev@sunfishcode.online>"
+          "Jakub Konka <kubkon@jakubkonka.com>"
+        ];
+        dependencies = [
+          {
+            name = "bitflags";
+            packageId = "bitflags";
+          }
+          {
+            name = "errno";
+            packageId = "errno";
+            rename = "libc_errno";
+            optional = true;
+            usesDefaultFeatures = false;
+            target = { target, features }: ((!(target."rustix_use_libc" or false)) && (!(target."miri" or false)) && (target."os" == "linux") && ((target."arch" == "x86") || ((target."arch" == "x86_64") && (target."pointer_width" == "64")) || ((target."endian" == "little") && ((target."arch" == "arm") || ((target."arch" == "aarch64") && (target."pointer_width" == "64")) || (target."arch" == "powerpc64") || (target."arch" == "riscv64") || (target."arch" == "mips") || (target."arch" == "mips64")))));
+          }
+          {
+            name = "errno";
+            packageId = "errno";
+            rename = "libc_errno";
+            usesDefaultFeatures = false;
+            target = { target, features }: ((target."rustix_use_libc" or false) || (target."miri" or false) || (!((target."os" == "linux") && ((target."arch" == "x86") || ((target."arch" == "x86_64") && (target."pointer_width" == "64")) || ((target."endian" == "little") && ((target."arch" == "arm") || ((target."arch" == "aarch64") && (target."pointer_width" == "64")) || (target."arch" == "powerpc64") || (target."arch" == "riscv64") || (target."arch" == "mips") || (target."arch" == "mips64")))))));
+          }
+          {
+            name = "io-lifetimes";
+            packageId = "io-lifetimes";
+            optional = true;
+            usesDefaultFeatures = false;
+            features = [ "close" ];
+          }
+          {
+            name = "libc";
+            packageId = "libc";
+            optional = true;
+            target = { target, features }: ((!(target."rustix_use_libc" or false)) && (!(target."miri" or false)) && (target."os" == "linux") && ((target."arch" == "x86") || ((target."arch" == "x86_64") && (target."pointer_width" == "64")) || ((target."endian" == "little") && ((target."arch" == "arm") || ((target."arch" == "aarch64") && (target."pointer_width" == "64")) || (target."arch" == "powerpc64") || (target."arch" == "riscv64") || (target."arch" == "mips") || (target."arch" == "mips64")))));
+            features = [ "extra_traits" ];
+          }
+          {
+            name = "libc";
+            packageId = "libc";
+            target = { target, features }: ((target."rustix_use_libc" or false) || (target."miri" or false) || (!((target."os" == "linux") && ((target."arch" == "x86") || ((target."arch" == "x86_64") && (target."pointer_width" == "64")) || ((target."endian" == "little") && ((target."arch" == "arm") || ((target."arch" == "aarch64") && (target."pointer_width" == "64")) || (target."arch" == "powerpc64") || (target."arch" == "riscv64") || (target."arch" == "mips") || (target."arch" == "mips64")))))));
+            features = [ "extra_traits" ];
+          }
+          {
+            name = "linux-raw-sys";
+            packageId = "linux-raw-sys";
+            usesDefaultFeatures = false;
+            target = { target, features }: (((target."os" == "android") || (target."os" == "linux")) && ((target."rustix_use_libc" or false) || (target."miri" or false) || (!((target."os" == "linux") && ((target."arch" == "x86") || ((target."arch" == "x86_64") && (target."pointer_width" == "64")) || ((target."endian" == "little") && ((target."arch" == "arm") || ((target."arch" == "aarch64") && (target."pointer_width" == "64")) || (target."arch" == "powerpc64") || (target."arch" == "riscv64") || (target."arch" == "mips") || (target."arch" == "mips64"))))))));
+            features = [ "general" "no_std" ];
+          }
+          {
+            name = "linux-raw-sys";
+            packageId = "linux-raw-sys";
+            usesDefaultFeatures = false;
+            target = { target, features }: ((!(target."rustix_use_libc" or false)) && (!(target."miri" or false)) && (target."os" == "linux") && ((target."arch" == "x86") || ((target."arch" == "x86_64") && (target."pointer_width" == "64")) || ((target."endian" == "little") && ((target."arch" == "arm") || ((target."arch" == "aarch64") && (target."pointer_width" == "64")) || (target."arch" == "powerpc64") || (target."arch" == "riscv64") || (target."arch" == "mips") || (target."arch" == "mips64")))));
+            features = [ "general" "errno" "ioctl" "no_std" ];
+          }
+          {
+            name = "windows-sys";
+            packageId = "windows-sys 0.45.0";
+            target = { target, features }: (target."windows" or false);
+            features = [ "Win32_Foundation" "Win32_Networking_WinSock" "Win32_NetworkManagement_IpHelper" "Win32_System_Threading" ];
+          }
+        ];
+        devDependencies = [
+          {
+            name = "errno";
+            packageId = "errno";
+            usesDefaultFeatures = false;
+          }
+          {
+            name = "io-lifetimes";
+            packageId = "io-lifetimes";
+            usesDefaultFeatures = false;
+            features = [ "close" ];
+          }
+          {
+            name = "libc";
+            packageId = "libc";
+          }
+        ];
+        features = {
+          "all-apis" = [ "fs" "io_uring" "mm" "net" "param" "process" "procfs" "rand" "runtime" "termios" "thread" "time" ];
+          "all-impls" = [ "os_pipe" "fs-err" ];
+          "alloc" = [ "dep:alloc" ];
+          "cc" = [ "dep:cc" ];
+          "compiler_builtins" = [ "dep:compiler_builtins" ];
+          "core" = [ "dep:core" ];
+          "default" = [ "std" "use-libc-auxv" ];
+          "fs-err" = [ "io-lifetimes/fs-err" ];
+          "io-lifetimes" = [ "dep:io-lifetimes" ];
+          "io_uring" = [ "fs" "net" ];
+          "itoa" = [ "dep:itoa" ];
+          "libc" = [ "dep:libc" ];
+          "libc_errno" = [ "dep:libc_errno" ];
+          "once_cell" = [ "dep:once_cell" ];
+          "os_pipe" = [ "io-lifetimes/os_pipe" ];
+          "param" = [ "fs" ];
+          "procfs" = [ "once_cell" "itoa" "fs" ];
+          "rustc-dep-of-std" = [ "core" "alloc" "compiler_builtins" "linux-raw-sys/rustc-dep-of-std" "bitflags/rustc-dep-of-std" ];
+          "std" = [ "io-lifetimes" ];
+          "use-libc" = [ "libc_errno" "libc" ];
+          "use-libc-auxv" = [ "libc" ];
+        };
+        resolvedDefaultFeatures = [ "default" "io-lifetimes" "libc" "std" "termios" "use-libc-auxv" ];
       };
       "rustls 0.19.1" = rec {
         crateName = "rustls";
@@ -6298,7 +6468,7 @@ rec {
           "derive" = [ "serde_derive" ];
           "serde_derive" = [ "dep:serde_derive" ];
         };
-        resolvedDefaultFeatures = [ "default" "derive" "serde_derive" "std" ];
+        resolvedDefaultFeatures = [ "alloc" "default" "derive" "serde_derive" "std" ];
       };
       "serde_derive" = rec {
         crateName = "serde_derive";
@@ -6330,9 +6500,9 @@ rec {
       };
       "serde_json" = rec {
         crateName = "serde_json";
-        version = "1.0.92";
+        version = "1.0.93";
         edition = "2018";
-        sha256 = "0sl95s1y54xrxxkb2vrg4g98818w2cnc5d4qm9l95mfbq46syd3l";
+        sha256 = "0xmwq2838lvc50g849k8qsrwvj7nfaaw5wns0x8mp24ikjv0dm6a";
         authors = [
           "Erick Tryzelaar <erick.tryzelaar@gmail.com>"
           "David Tolnay <dtolnay@gmail.com>"
@@ -6496,37 +6666,7 @@ rec {
           "serde" = [ "dep:serde" ];
         };
       };
-      "socket2 0.3.19" = rec {
-        crateName = "socket2";
-        version = "0.3.19";
-        edition = "2018";
-        sha256 = "0vldz14mxqxnjqb6an2pj7mgclv7nrk45cpscwq7g3fj2c0mfbhj";
-        authors = [
-          "Alex Crichton <alex@alexcrichton.com>"
-        ];
-        dependencies = [
-          {
-            name = "cfg-if";
-            packageId = "cfg-if 1.0.0";
-            target = { target, features }: (target."unix" or false);
-          }
-          {
-            name = "libc";
-            packageId = "libc";
-            target = { target, features }: (target."unix" or false);
-            features = [ "align" ];
-          }
-          {
-            name = "winapi";
-            packageId = "winapi 0.3.9";
-            target = { target, features }: (target."windows" or false);
-            features = [ "handleapi" "ws2def" "ws2ipdef" "ws2tcpip" "minwindef" ];
-          }
-        ];
-        features = {
-        };
-      };
-      "socket2 0.4.7" = rec {
+      "socket2" = rec {
         crateName = "socket2";
         version = "0.4.7";
         edition = "2018";
@@ -6795,7 +6935,7 @@ rec {
         ];
 
       };
-      "time" = rec {
+      "time 0.1.45" = rec {
         crateName = "time";
         version = "0.1.45";
         edition = "2015";
@@ -6830,6 +6970,64 @@ rec {
         features = {
           "rustc-serialize" = [ "dep:rustc-serialize" ];
         };
+      };
+      "time 0.3.17" = rec {
+        crateName = "time";
+        version = "0.3.17";
+        edition = "2021";
+        sha256 = "0xl3lg062kzfs2byg8aigx98wygd767rhjs3lsy37ggf2x3byqd5";
+        authors = [
+          "Jacob Pratt <open-source@jhpratt.dev>"
+          "Time contributors"
+        ];
+        dependencies = [
+          {
+            name = "serde";
+            packageId = "serde";
+            optional = true;
+            usesDefaultFeatures = false;
+          }
+          {
+            name = "time-core";
+            packageId = "time-core";
+          }
+        ];
+        devDependencies = [
+          {
+            name = "serde";
+            packageId = "serde";
+            usesDefaultFeatures = false;
+            features = [ "derive" ];
+          }
+        ];
+        features = {
+          "alloc" = [ "serde?/alloc" ];
+          "default" = [ "std" ];
+          "formatting" = [ "dep:itoa" "std" "time-macros?/formatting" ];
+          "large-dates" = [ "time-macros?/large-dates" ];
+          "local-offset" = [ "std" "dep:libc" "dep:num_threads" ];
+          "macros" = [ "dep:time-macros" ];
+          "parsing" = [ "time-macros?/parsing" ];
+          "quickcheck" = [ "dep:quickcheck" "alloc" ];
+          "rand" = [ "dep:rand" ];
+          "serde" = [ "dep:serde" "time-macros?/serde" ];
+          "serde-human-readable" = [ "serde" "formatting" "parsing" ];
+          "serde-well-known" = [ "serde" "formatting" "parsing" ];
+          "std" = [ "alloc" ];
+          "wasm-bindgen" = [ "dep:js-sys" ];
+        };
+        resolvedDefaultFeatures = [ "alloc" "default" "std" ];
+      };
+      "time-core" = rec {
+        crateName = "time-core";
+        version = "0.1.0";
+        edition = "2021";
+        sha256 = "1z803zwzyh16nk3c4nmkw8v69nyj0r4v8s3yag68mvya38gkw59f";
+        authors = [
+          "Jacob Pratt <open-source@jhpratt.dev>"
+          "Time contributors"
+        ];
+
       };
       "tinyvec" = rec {
         crateName = "tinyvec";
@@ -6884,7 +7082,7 @@ rec {
           }
           {
             name = "futures";
-            packageId = "futures 0.1.31";
+            packageId = "futures";
           }
           {
             name = "mio";
@@ -6970,83 +7168,6 @@ rec {
         };
         resolvedDefaultFeatures = [ "bytes" "io" "mio" "num_cpus" "reactor" "rt-full" "tcp" "timer" "tokio-current-thread" "tokio-executor" "tokio-io" "tokio-reactor" "tokio-tcp" "tokio-threadpool" "tokio-timer" ];
       };
-      "tokio 0.2.25" = rec {
-        crateName = "tokio";
-        version = "0.2.25";
-        edition = "2018";
-        sha256 = "14l0rll6y1dyzh6qcd8rma2ch3wx0dxzxq8b54di744sjirs40v7";
-        authors = [
-          "Tokio Contributors <team@tokio.rs>"
-        ];
-        dependencies = [
-          {
-            name = "bytes";
-            packageId = "bytes 0.5.6";
-          }
-          {
-            name = "iovec";
-            packageId = "iovec";
-            optional = true;
-          }
-          {
-            name = "lazy_static";
-            packageId = "lazy_static";
-            optional = true;
-          }
-          {
-            name = "mio";
-            packageId = "mio 0.6.23";
-            optional = true;
-          }
-          {
-            name = "pin-project-lite";
-            packageId = "pin-project-lite 0.1.12";
-          }
-          {
-            name = "slab";
-            packageId = "slab";
-            optional = true;
-          }
-        ];
-        features = {
-          "blocking" = [ "rt-core" ];
-          "dns" = [ "rt-core" ];
-          "fnv" = [ "dep:fnv" ];
-          "fs" = [ "rt-core" "io-util" ];
-          "full" = [ "blocking" "dns" "fs" "io-driver" "io-util" "io-std" "macros" "net" "process" "rt-core" "rt-util" "rt-threaded" "signal" "stream" "sync" "time" ];
-          "futures-core" = [ "dep:futures-core" ];
-          "io-driver" = [ "mio" "lazy_static" ];
-          "io-std" = [ "rt-core" ];
-          "io-util" = [ "memchr" ];
-          "iovec" = [ "dep:iovec" ];
-          "lazy_static" = [ "dep:lazy_static" ];
-          "libc" = [ "dep:libc" ];
-          "macros" = [ "tokio-macros" ];
-          "memchr" = [ "dep:memchr" ];
-          "mio" = [ "dep:mio" ];
-          "mio-named-pipes" = [ "dep:mio-named-pipes" ];
-          "mio-uds" = [ "dep:mio-uds" ];
-          "net" = [ "dns" "tcp" "udp" "uds" ];
-          "num_cpus" = [ "dep:num_cpus" ];
-          "parking_lot" = [ "dep:parking_lot" ];
-          "process" = [ "io-driver" "libc" "mio-named-pipes" "signal" "winapi/consoleapi" "winapi/minwindef" "winapi/threadpoollegacyapiset" "winapi/winerror" ];
-          "rt-core" = [ "slab" ];
-          "rt-threaded" = [ "num_cpus" "rt-core" ];
-          "signal" = [ "io-driver" "lazy_static" "libc" "mio-uds" "signal-hook-registry" "winapi/consoleapi" "winapi/minwindef" ];
-          "signal-hook-registry" = [ "dep:signal-hook-registry" ];
-          "slab" = [ "dep:slab" ];
-          "stream" = [ "futures-core" ];
-          "sync" = [ "fnv" ];
-          "tcp" = [ "io-driver" "iovec" ];
-          "time" = [ "slab" ];
-          "tokio-macros" = [ "dep:tokio-macros" ];
-          "tracing" = [ "dep:tracing" ];
-          "udp" = [ "io-driver" ];
-          "uds" = [ "io-driver" "mio-uds" "libc" ];
-          "winapi" = [ "dep:winapi" ];
-        };
-        resolvedDefaultFeatures = [ "default" "io-driver" "iovec" "lazy_static" "mio" "rt-core" "slab" "tcp" "time" "udp" ];
-      };
       "tokio 1.25.0" = rec {
         crateName = "tokio";
         version = "1.25.0";
@@ -7089,7 +7210,7 @@ rec {
           }
           {
             name = "pin-project-lite";
-            packageId = "pin-project-lite 0.2.9";
+            packageId = "pin-project-lite";
           }
           {
             name = "signal-hook-registry";
@@ -7099,7 +7220,7 @@ rec {
           }
           {
             name = "socket2";
-            packageId = "socket2 0.4.7";
+            packageId = "socket2";
             optional = true;
             target = { target, features }: (!((target."arch" == "wasm32") || (target."arch" == "wasm64")));
             features = [ "all" ];
@@ -7136,7 +7257,7 @@ rec {
           }
           {
             name = "socket2";
-            packageId = "socket2 0.4.7";
+            packageId = "socket2";
             target = {target, features}: (!((target."arch" == "wasm32") || (target."arch" == "wasm64")));
           }
         ];
@@ -7183,7 +7304,7 @@ rec {
           }
           {
             name = "futures";
-            packageId = "futures 0.1.31";
+            packageId = "futures";
           }
         ];
         features = {
@@ -7204,7 +7325,7 @@ rec {
         dependencies = [
           {
             name = "futures";
-            packageId = "futures 0.1.31";
+            packageId = "futures";
           }
           {
             name = "tokio-executor";
@@ -7228,7 +7349,7 @@ rec {
           }
           {
             name = "futures";
-            packageId = "futures 0.1.31";
+            packageId = "futures";
           }
         ];
 
@@ -7248,7 +7369,7 @@ rec {
           }
           {
             name = "futures";
-            packageId = "futures 0.1.31";
+            packageId = "futures";
           }
           {
             name = "log";
@@ -7298,7 +7419,7 @@ rec {
           }
           {
             name = "futures";
-            packageId = "futures 0.1.31";
+            packageId = "futures";
           }
           {
             name = "lazy_static";
@@ -7431,7 +7552,7 @@ rec {
           }
           {
             name = "futures";
-            packageId = "futures 0.1.31";
+            packageId = "futures";
           }
         ];
 
@@ -7451,7 +7572,7 @@ rec {
           }
           {
             name = "futures";
-            packageId = "futures 0.1.31";
+            packageId = "futures";
           }
           {
             name = "iovec";
@@ -7495,7 +7616,7 @@ rec {
           }
           {
             name = "futures";
-            packageId = "futures 0.1.31";
+            packageId = "futures";
           }
           {
             name = "lazy_static";
@@ -7535,7 +7656,7 @@ rec {
           }
           {
             name = "futures";
-            packageId = "futures 0.1.31";
+            packageId = "futures";
           }
           {
             name = "slab";
@@ -7550,9 +7671,9 @@ rec {
       };
       "tokio-util" = rec {
         crateName = "tokio-util";
-        version = "0.7.4";
+        version = "0.7.6";
         edition = "2018";
-        sha256 = "0h67jb56bsxy4pi1a41pda8d52569ci5clvqv3c6cg9vy1sy1chb";
+        sha256 = "10qmy8zjvnwmpi830g32gbij45ghn73k497sfv9zlvafnq43nsmw";
         authors = [
           "Tokio Contributors <team@tokio.rs>"
         ];
@@ -7571,7 +7692,7 @@ rec {
           }
           {
             name = "pin-project-lite";
-            packageId = "pin-project-lite 0.2.9";
+            packageId = "pin-project-lite";
           }
           {
             name = "tokio";
@@ -7641,7 +7762,7 @@ rec {
           }
           {
             name = "pin-project-lite";
-            packageId = "pin-project-lite 0.2.9";
+            packageId = "pin-project-lite";
           }
           {
             name = "tracing-attributes";
@@ -7726,9 +7847,9 @@ rec {
       };
       "trust-dns-proto" = rec {
         crateName = "trust-dns-proto";
-        version = "0.19.7";
+        version = "0.22.0";
         edition = "2018";
-        sha256 = "1a8mhawa5bhavmhickmr8ncnvs5jiwpyidig3nabk2nnq2h73b8w";
+        sha256 = "09mwv7fnjrkdpf82qqvsbby5xnnpwn0kcp2cqn53br50wk8q6zsg";
         libName = "trust_dns_proto";
         authors = [
           "Benjamin Fry <benjaminfry@me.com>"
@@ -7739,21 +7860,32 @@ rec {
             packageId = "async-trait";
           }
           {
-            name = "backtrace";
-            packageId = "backtrace";
-            optional = true;
-          }
-          {
             name = "cfg-if";
             packageId = "cfg-if 1.0.0";
+          }
+          {
+            name = "data-encoding";
+            packageId = "data-encoding";
           }
           {
             name = "enum-as-inner";
             packageId = "enum-as-inner";
           }
           {
-            name = "futures";
-            packageId = "futures 0.3.26";
+            name = "futures-channel";
+            packageId = "futures-channel";
+            usesDefaultFeatures = false;
+            features = [ "std" ];
+          }
+          {
+            name = "futures-io";
+            packageId = "futures-io";
+            usesDefaultFeatures = false;
+            features = [ "std" ];
+          }
+          {
+            name = "futures-util";
+            packageId = "futures-util";
             usesDefaultFeatures = false;
             features = [ "std" ];
           }
@@ -7762,16 +7894,16 @@ rec {
             packageId = "idna 0.2.3";
           }
           {
+            name = "ipnet";
+            packageId = "ipnet";
+          }
+          {
             name = "lazy_static";
             packageId = "lazy_static";
           }
           {
-            name = "log";
-            packageId = "log";
-          }
-          {
             name = "rand";
-            packageId = "rand 0.7.3";
+            packageId = "rand 0.8.5";
           }
           {
             name = "smallvec";
@@ -7782,9 +7914,19 @@ rec {
             packageId = "thiserror";
           }
           {
+            name = "tinyvec";
+            packageId = "tinyvec";
+            features = [ "alloc" ];
+          }
+          {
             name = "tokio";
-            packageId = "tokio 0.2.25";
+            packageId = "tokio 1.25.0";
             optional = true;
+            features = [ "io-util" ];
+          }
+          {
+            name = "tracing";
+            packageId = "tracing";
           }
           {
             name = "url";
@@ -7793,43 +7935,53 @@ rec {
         ];
         devDependencies = [
           {
-            name = "futures";
-            packageId = "futures 0.3.26";
-            usesDefaultFeatures = false;
-            features = [ "std" "executor" ];
-          }
-          {
             name = "tokio";
-            packageId = "tokio 0.2.25";
-            features = [ "rt-core" "time" ];
+            packageId = "tokio 1.25.0";
+            features = [ "rt" "time" "macros" ];
           }
         ];
         features = {
           "backtrace" = [ "dep:backtrace" ];
-          "data-encoding" = [ "dep:data-encoding" ];
+          "bytes" = [ "dep:bytes" ];
           "default" = [ "tokio-runtime" ];
-          "dnssec" = [ "data-encoding" ];
+          "dns-over-https" = [ "bytes" "dns-over-tls" "h2" "http" ];
+          "dns-over-https-rustls" = [ "dns-over-https" "dns-over-rustls" "webpki-roots" ];
+          "dns-over-native-tls" = [ "dns-over-tls" "native-tls" "tokio-native-tls" ];
+          "dns-over-openssl" = [ "dns-over-tls" "openssl" "tokio-openssl" ];
+          "dns-over-quic" = [ "quinn" "rustls/quic" "dns-over-rustls" "bytes" "webpki-roots" ];
+          "dns-over-rustls" = [ "dns-over-tls" "rustls" "rustls-pemfile" "tokio-rustls" "webpki" ];
           "dnssec-openssl" = [ "dnssec" "openssl" ];
           "dnssec-ring" = [ "dnssec" "ring" ];
+          "h2" = [ "dep:h2" ];
+          "http" = [ "dep:http" ];
           "js-sys" = [ "dep:js-sys" ];
-          "mdns" = [ "socket2/reuseport" ];
+          "mdns" = [ "socket2/all" ];
+          "native-tls" = [ "dep:native-tls" ];
           "openssl" = [ "dep:openssl" ];
+          "quinn" = [ "dep:quinn" ];
           "ring" = [ "dep:ring" ];
+          "rustls" = [ "dep:rustls" ];
+          "rustls-pemfile" = [ "dep:rustls-pemfile" ];
           "serde" = [ "dep:serde" ];
-          "serde-config" = [ "serde" ];
+          "serde-config" = [ "serde" "url/serde" ];
           "socket2" = [ "dep:socket2" ];
           "tokio" = [ "dep:tokio" ];
-          "tokio-runtime" = [ "tokio/rt-core" "tokio/udp" "tokio/tcp" "tokio/time" ];
+          "tokio-native-tls" = [ "dep:tokio-native-tls" ];
+          "tokio-openssl" = [ "dep:tokio-openssl" ];
+          "tokio-runtime" = [ "tokio/net" "tokio/rt" "tokio/time" "tokio/rt-multi-thread" ];
+          "tokio-rustls" = [ "dep:tokio-rustls" ];
           "wasm-bindgen" = [ "wasm-bindgen-crate" "js-sys" ];
           "wasm-bindgen-crate" = [ "dep:wasm-bindgen-crate" ];
+          "webpki" = [ "dep:webpki" ];
+          "webpki-roots" = [ "dep:webpki-roots" ];
         };
-        resolvedDefaultFeatures = [ "backtrace" "tokio" "tokio-runtime" ];
+        resolvedDefaultFeatures = [ "tokio" "tokio-runtime" ];
       };
       "trust-dns-resolver" = rec {
         crateName = "trust-dns-resolver";
-        version = "0.19.7";
+        version = "0.22.0";
         edition = "2018";
-        sha256 = "1sqcvwcfllypmjqnhf4dksggpykq57nkh2vdl99xnx8i6wxmj3vi";
+        sha256 = "1zkw5fx7dwiy4ymn7ywmsb3qhf69mnqdw9mcpyps3c7gvjj1mwmg";
         libName = "trust_dns_resolver";
         authors = [
           "Benjamin Fry <benjaminfry@me.com>"
@@ -7837,11 +7989,11 @@ rec {
         dependencies = [
           {
             name = "cfg-if";
-            packageId = "cfg-if 0.1.10";
+            packageId = "cfg-if 1.0.0";
           }
           {
-            name = "futures";
-            packageId = "futures 0.3.26";
+            name = "futures-util";
+            packageId = "futures-util";
             usesDefaultFeatures = false;
             features = [ "std" ];
           }
@@ -7856,12 +8008,12 @@ rec {
             packageId = "lazy_static";
           }
           {
-            name = "log";
-            packageId = "log";
-          }
-          {
             name = "lru-cache";
             packageId = "lru-cache";
+          }
+          {
+            name = "parking_lot";
+            packageId = "parking_lot 0.12.1";
           }
           {
             name = "resolv-conf";
@@ -7879,8 +8031,12 @@ rec {
           }
           {
             name = "tokio";
-            packageId = "tokio 0.2.25";
+            packageId = "tokio 1.25.0";
             optional = true;
+          }
+          {
+            name = "tracing";
+            packageId = "tracing";
           }
           {
             name = "trust-dns-proto";
@@ -7888,42 +8044,30 @@ rec {
             usesDefaultFeatures = false;
           }
         ];
-        devDependencies = [
-          {
-            name = "futures";
-            packageId = "futures 0.3.26";
-            usesDefaultFeatures = false;
-            features = [ "std" "executor" ];
-          }
-        ];
         features = {
-          "backtrace" = [ "trust-dns-proto/backtrace" ];
-          "default" = [ "backtrace" "system-config" "tokio-runtime" ];
-          "dns-over-https-rustls" = [ "trust-dns-https" "dns-over-rustls" "dns-over-https" ];
-          "dns-over-native-tls" = [ "dns-over-tls" "tokio-tls" "trust-dns-native-tls" ];
-          "dns-over-openssl" = [ "dns-over-tls" "trust-dns-openssl" "tokio-openssl" ];
-          "dns-over-rustls" = [ "dns-over-tls" "rustls" "tokio-rustls" "trust-dns-rustls" "webpki-roots" ];
+          "default" = [ "system-config" "tokio-runtime" ];
+          "dns-over-https" = [ "trust-dns-proto/dns-over-https" ];
+          "dns-over-https-rustls" = [ "trust-dns-proto/dns-over-https-rustls" "dns-over-rustls" "dns-over-https" ];
+          "dns-over-native-tls" = [ "dns-over-tls" "tokio-native-tls" "trust-dns-proto/dns-over-native-tls" ];
+          "dns-over-openssl" = [ "dns-over-tls" "trust-dns-proto/dns-over-openssl" "tokio-openssl" ];
+          "dns-over-quic" = [ "rustls/quic" "dns-over-rustls" "trust-dns-proto/dns-over-quic" ];
+          "dns-over-rustls" = [ "dns-over-tls" "rustls" "tokio-rustls" "trust-dns-proto/dns-over-rustls" "webpki-roots" ];
           "dnssec-openssl" = [ "dnssec" "trust-dns-proto/dnssec-openssl" ];
           "dnssec-ring" = [ "dnssec" "trust-dns-proto/dnssec-ring" ];
           "ipconfig" = [ "dep:ipconfig" ];
-          "mdns" = [ "trust-dns-proto/mdns" ];
           "resolv-conf" = [ "dep:resolv-conf" ];
           "rustls" = [ "dep:rustls" ];
           "serde" = [ "dep:serde" ];
           "serde-config" = [ "serde" "trust-dns-proto/serde-config" ];
           "system-config" = [ "ipconfig" "resolv-conf" ];
           "tokio" = [ "dep:tokio" ];
+          "tokio-native-tls" = [ "dep:tokio-native-tls" ];
           "tokio-openssl" = [ "dep:tokio-openssl" ];
-          "tokio-runtime" = [ "tokio/rt-core" "trust-dns-proto/tokio-runtime" ];
+          "tokio-runtime" = [ "tokio/rt" "trust-dns-proto/tokio-runtime" ];
           "tokio-rustls" = [ "dep:tokio-rustls" ];
-          "tokio-tls" = [ "dep:tokio-tls" ];
-          "trust-dns-https" = [ "dep:trust-dns-https" ];
-          "trust-dns-native-tls" = [ "dep:trust-dns-native-tls" ];
-          "trust-dns-openssl" = [ "dep:trust-dns-openssl" ];
-          "trust-dns-rustls" = [ "dep:trust-dns-rustls" ];
           "webpki-roots" = [ "dep:webpki-roots" ];
         };
-        resolvedDefaultFeatures = [ "backtrace" "default" "ipconfig" "resolv-conf" "system-config" "tokio" "tokio-runtime" ];
+        resolvedDefaultFeatures = [ "default" "ipconfig" "resolv-conf" "system-config" "tokio" "tokio-runtime" ];
       };
       "try-lock" = rec {
         crateName = "try-lock";
@@ -8171,7 +8315,7 @@ rec {
         dependencies = [
           {
             name = "getrandom";
-            packageId = "getrandom 0.2.8";
+            packageId = "getrandom";
             optional = true;
           }
         ];
@@ -8390,7 +8534,7 @@ rec {
         dependencies = [
           {
             name = "futures";
-            packageId = "futures 0.1.31";
+            packageId = "futures";
           }
           {
             name = "log";
@@ -8445,23 +8589,6 @@ rec {
         version = "0.11.0+wasi-snapshot-preview1";
         edition = "2018";
         sha256 = "08z4hxwkpdpalxjps1ai9y7ihin26y9f476i53dv98v45gkqg3cw";
-        authors = [
-          "The Cranelift Project Developers"
-        ];
-        features = {
-          "compiler_builtins" = [ "dep:compiler_builtins" ];
-          "core" = [ "dep:core" ];
-          "default" = [ "std" ];
-          "rustc-dep-of-std" = [ "compiler_builtins" "core" "rustc-std-workspace-alloc" ];
-          "rustc-std-workspace-alloc" = [ "dep:rustc-std-workspace-alloc" ];
-        };
-        resolvedDefaultFeatures = [ "default" "std" ];
-      };
-      "wasi 0.9.0+wasi-snapshot-preview1" = rec {
-        crateName = "wasi";
-        version = "0.9.0+wasi-snapshot-preview1";
-        edition = "2018";
-        sha256 = "06g5v3vrdapfzvfq662cij7v8a1flwr2my45nnncdv2galrdzkfc";
         authors = [
           "The Cranelift Project Developers"
         ];
@@ -9181,12 +9308,9 @@ rec {
       };
       "widestring" = rec {
         crateName = "widestring";
-        version = "0.4.3";
-        edition = "2015";
-        sha256 = "0z3ba8qrxb62vpfgk7n2xs2grm9kdaj1cz4q8s0gs8fx8h0r8s61";
-        authors = [
-          "Kathryn Long <squeeself@gmail.com>"
-        ];
+        version = "0.5.1";
+        edition = "2018";
+        sha256 = "10qrilijh1qzw362mvd4nsz3vv32dxx530vk41hkcx8hah22z20p";
         features = {
           "default" = [ "std" ];
           "std" = [ "alloc" ];
@@ -9954,7 +10078,7 @@ rec {
           "Win32_UI_WindowsAndMessaging" = [ "Win32_UI" ];
           "Win32_UI_Wpf" = [ "Win32_UI" ];
         };
-        resolvedDefaultFeatures = [ "Win32" "Win32_Foundation" "Win32_System" "Win32_System_LibraryLoader" "Win32_System_SystemServices" "Win32_System_WindowsProgramming" "default" ];
+        resolvedDefaultFeatures = [ "Win32" "Win32_Foundation" "Win32_NetworkManagement" "Win32_NetworkManagement_IpHelper" "Win32_Networking" "Win32_Networking_WinSock" "Win32_Security" "Win32_Storage" "Win32_Storage_FileSystem" "Win32_System" "Win32_System_Console" "Win32_System_IO" "Win32_System_LibraryLoader" "Win32_System_SystemServices" "Win32_System_Threading" "Win32_System_WindowsProgramming" "default" ];
       };
       "windows-targets" = rec {
         crateName = "windows-targets";
