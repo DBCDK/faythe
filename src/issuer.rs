@@ -293,7 +293,7 @@ fn init_resolvers<'l>(config: &FaytheConfig) -> HashMap<String, Resolver> {
             }?;
 
             let mut conf = ResolverConfig::new();
-            for c in &*NameServerConfigGroup::from_ips_clear(&[ip.to_owned()], 53) {
+            for c in &*NameServerConfigGroup::from_ips_clear(&[ip.to_owned()], 53, true) {
                 conf.add_name_server(c.to_owned());
             }
             let opts = ResolverOpts {
