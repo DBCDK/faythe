@@ -20,6 +20,8 @@ use self::base64::DecodeError;
 use crate::common::{Cert, KubernetesPersistSpec, DNSName, IssueSource, ValidityVerifier, CertSpecable, CertSpec, SpecError, PersistSpec, TouchError, CertName};
 use acme_lib::Certificate;
 
+use base64::Engine;
+
 #[derive(Debug, Clone)]
 pub struct Ingress {
     pub name: String,
@@ -147,11 +149,13 @@ fn base64_decode(subject: &Value) -> Result<Vec<u8>, KubeError> {
         Some(s) => Ok(s),
         _ => Err(KubeError::Format)
     }?;
-    Ok(base64::decode(&s)?)
+    let engine = base64::engine::general_purpose::STANDARD;
+    Ok(engine.decode(&s)?)
 }
 
 fn base64_encode(subject: &Vec<u8>) -> String {
-    base64::encode(&subject)
+    let engine = base64::engine::general_purpose::STANDARD;
+    engine.encode(&subject)
 }
 
 pub trait K8SAddressable {
