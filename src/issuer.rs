@@ -296,11 +296,9 @@ fn init_resolvers<'l>(config: &FaytheConfig) -> HashMap<String, Resolver> {
             for c in &*NameServerConfigGroup::from_ips_clear(&[ip.to_owned()], 53, true) {
                 conf.add_name_server(c.to_owned());
             }
-            let opts = ResolverOpts {
-                // Never believe NXDOMAIN for more than 1 minute
-                negative_max_ttl: Some(Duration::new(60,0)),
-                .. ResolverOpts::default()
-            };
+            let mut opts = ResolverOpts::default();
+            // Never believe NXDOMAIN for more than 1 minute
+            opts.negative_max_ttl = Some(Duration::new(60,0));
             resolvers.insert(server.to_owned(), Resolver::new(conf, opts).unwrap());
             Ok(())
         }() {
