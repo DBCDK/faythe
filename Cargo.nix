@@ -132,7 +132,7 @@ rec {
           }
           {
             name = "time";
-            packageId = "time 0.1.45";
+            packageId = "time";
           }
         ];
 
@@ -610,7 +610,7 @@ rec {
           }
           {
             name = "time";
-            packageId = "time 0.1.45";
+            packageId = "time";
             optional = true;
           }
           {
@@ -765,7 +765,7 @@ rec {
         dependencies = [
           {
             name = "time";
-            packageId = "time 0.1.45";
+            packageId = "time";
           }
           {
             name = "url";
@@ -824,7 +824,7 @@ rec {
           }
           {
             name = "time";
-            packageId = "time 0.1.45";
+            packageId = "time";
           }
           {
             name = "try_from";
@@ -1834,7 +1834,7 @@ rec {
           }
           {
             name = "time";
-            packageId = "time 0.3.17";
+            packageId = "time";
           }
           {
             name = "tokio";
@@ -2713,7 +2713,7 @@ rec {
           }
           {
             name = "time";
-            packageId = "time 0.1.45";
+            packageId = "time";
           }
           {
             name = "tokio";
@@ -5657,7 +5657,7 @@ rec {
           }
           {
             name = "time";
-            packageId = "time 0.1.45";
+            packageId = "time";
           }
           {
             name = "tokio";
@@ -6468,7 +6468,7 @@ rec {
           "derive" = [ "serde_derive" ];
           "serde_derive" = [ "dep:serde_derive" ];
         };
-        resolvedDefaultFeatures = [ "alloc" "default" "derive" "serde_derive" "std" ];
+        resolvedDefaultFeatures = [ "default" "derive" "serde_derive" "std" ];
       };
       "serde_derive" = rec {
         crateName = "serde_derive";
@@ -6935,7 +6935,7 @@ rec {
         ];
 
       };
-      "time 0.1.45" = rec {
+      "time" = rec {
         crateName = "time";
         version = "0.1.45";
         edition = "2015";
@@ -6970,64 +6970,6 @@ rec {
         features = {
           "rustc-serialize" = [ "dep:rustc-serialize" ];
         };
-      };
-      "time 0.3.17" = rec {
-        crateName = "time";
-        version = "0.3.17";
-        edition = "2021";
-        sha256 = "0xl3lg062kzfs2byg8aigx98wygd767rhjs3lsy37ggf2x3byqd5";
-        authors = [
-          "Jacob Pratt <open-source@jhpratt.dev>"
-          "Time contributors"
-        ];
-        dependencies = [
-          {
-            name = "serde";
-            packageId = "serde";
-            optional = true;
-            usesDefaultFeatures = false;
-          }
-          {
-            name = "time-core";
-            packageId = "time-core";
-          }
-        ];
-        devDependencies = [
-          {
-            name = "serde";
-            packageId = "serde";
-            usesDefaultFeatures = false;
-            features = [ "derive" ];
-          }
-        ];
-        features = {
-          "alloc" = [ "serde?/alloc" ];
-          "default" = [ "std" ];
-          "formatting" = [ "dep:itoa" "std" "time-macros?/formatting" ];
-          "large-dates" = [ "time-macros?/large-dates" ];
-          "local-offset" = [ "std" "dep:libc" "dep:num_threads" ];
-          "macros" = [ "dep:time-macros" ];
-          "parsing" = [ "time-macros?/parsing" ];
-          "quickcheck" = [ "dep:quickcheck" "alloc" ];
-          "rand" = [ "dep:rand" ];
-          "serde" = [ "dep:serde" "time-macros?/serde" ];
-          "serde-human-readable" = [ "serde" "formatting" "parsing" ];
-          "serde-well-known" = [ "serde" "formatting" "parsing" ];
-          "std" = [ "alloc" ];
-          "wasm-bindgen" = [ "dep:js-sys" ];
-        };
-        resolvedDefaultFeatures = [ "alloc" "default" "std" ];
-      };
-      "time-core" = rec {
-        crateName = "time-core";
-        version = "0.1.0";
-        edition = "2021";
-        sha256 = "1z803zwzyh16nk3c4nmkw8v69nyj0r4v8s3yag68mvya38gkw59f";
-        authors = [
-          "Jacob Pratt <open-source@jhpratt.dev>"
-          "Time contributors"
-        ];
-
       };
       "tinyvec" = rec {
         crateName = "tinyvec";
