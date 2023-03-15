@@ -18,7 +18,6 @@ jobs:
       run: |
         nix --experimental-features "nix-command flakes" flake update
         nix --experimental-features "nix-command flakes" develop --command cargo update
-        nix --experimental-features "nix-command flakes" develop --command crate2nix generate -n 'throw "nixpkgs: mandatory arg"' -f Cargo.toml
     - name: Create pull request
       id: pr
       uses: peter-evans/create-pull-request@v3.10.0
