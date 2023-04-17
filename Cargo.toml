@@ -26,3 +26,7 @@ vaultrs-login = "0"
 url = "2"
 chrono = "0"
 num-traits = "0"
+
+[profile]
+panic = "abort"
+
