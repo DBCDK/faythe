@@ -27,6 +27,6 @@ url = "2"
 chrono = "0"
 num-traits = "0"
 
-[profile]
+[profile.release]
 panic = "abort"
 
