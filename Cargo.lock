@@ -5,7 +5,7 @@ version = 3
 [[package]]
 name = "acme-lib"
 version = "0.8.1"
-source = "git+https://github.com/DBCDK/acme-lib?branch=v0.8.1-reqwest#84a3b8ccf58660d33984fe0e8ff04c9b46de9ad8"
+source = "git+https://github.com/DBCDK/acme-lib?branch=add-sans-individually#38c6919badae73ccfba9778435f0b8f361214af1"
 dependencies = [
  "base64 0.12.3",
  "lazy_static",

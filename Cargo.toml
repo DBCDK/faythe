@@ -11,7 +11,7 @@ serde_json = "1"
 openssl = "0"
 base64 = "0"
 time = "=0.1.45" # same version as acme-lib uses
-acme-lib = { git = 'https://github.com/DBCDK/acme-lib', branch = 'v0.8.1-reqwest' }
+acme-lib = { git = 'https://github.com/DBCDK/acme-lib', branch = 'add-sans-individually' }
 regex = "1"
 lazy_static = "1"
 walkdir = "2"
