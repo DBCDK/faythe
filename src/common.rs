@@ -1,7 +1,7 @@
 extern crate openssl;
 extern crate regex;
 
-use self::openssl::asn1::Asn1TimeRef;
+use self::openssl::asn1::{Asn1Time, Asn1TimeRef};
 use self::openssl::nid::Nid;
 use self::openssl::x509::{X509NameEntryRef, X509};
 
@@ -20,6 +20,7 @@ use std::collections::HashSet;
 use std::convert::TryFrom;
 use std::fmt::Formatter;
 use std::path::PathBuf;
+use chrono::{TimeZone, Utc};
 pub type CertName = String;
 
 #[derive(Debug, Clone, Serialize)]
@@ -199,12 +200,17 @@ impl std::convert::From<KubeError> for PersistError {
     }
 }
 
+pub enum TimeError {
+    Diff(openssl::error::ErrorStack),
+    UnixTimestampOutOfBounds,
+}
+
 #[derive(Debug, Clone)]
 pub struct Cert {
     pub cn: String,
     pub sans: HashSet<String>,
-    pub valid_from: time::Tm, // always utc
-    pub valid_to: time::Tm // always utc
+    pub valid_from: chrono::DateTime<Utc>,
+    pub valid_to: chrono::DateTime<Utc>,
 }
 
 impl Cert {
@@ -256,18 +262,24 @@ impl Cert {
         }
     }
 
-    // #cryhard rust openssl lib doesn't allow for a plain convertion from ASN-time to time::Tm or any
-    // other rustlang time type. :( So... We to_string the ASNTime and re-parse it and hope for the best
-    fn get_timestamp(time_ref: &Asn1TimeRef) -> Result<time::Tm, time::ParseError> {
-        const IN_FORMAT: &str = "%b %e %H:%M:%S %Y %Z"; // May 31 15:21:16 2020 GMT
-        time::strptime(&format!("{}", &time_ref), IN_FORMAT)
+    fn get_timestamp(time_ref: &Asn1TimeRef) -> Result<chrono::DateTime<Utc>, TimeError> {
+        let epoch = Asn1Time::from_unix(0).expect("Failed to create Asn1Time at unix epoch");
+        let diff = epoch.diff(&time_ref).map_err(TimeError::Diff)?;
+        //let diff = time_ref.diff(&epoch).map_err(TimeError::Diff)?;
+        let unix_ts = diff.days as i64 * (24 * 60 * 60) + diff.secs as i64;
+        use chrono::offset::LocalResult;
+        match chrono::Utc.timestamp_opt(unix_ts.into(), 0) {
+            LocalResult::None => Err(TimeError::UnixTimestampOutOfBounds),
+            LocalResult::Single(datetime) => Ok(datetime),
+            LocalResult::Ambiguous(_, _) => unreachable!("timestamp_opt never returns LocalResult::Ambigious"),
+        }
     }
 
     pub fn state(&self, config: &FaytheConfig, spec: &CertSpec) -> CertState {
-        let now = time::now_utc();
+        let now = Utc::now();
         let state = match self.valid_to {
             to if now > to => CertState::Expired,
-            to if now + time::Duration::days(config.renewal_threshold as i64) > to => CertState::ExpiresSoon,
+            to if now + chrono::Duration::days(config.renewal_threshold as i64) > to => CertState::ExpiresSoon,
             _ if now < self.valid_from => CertState::NotYetValid,
             to if now >= self.valid_from && now <= to => CertState::Valid,
             _ => CertState::Unknown,
@@ -369,8 +381,8 @@ impl std::convert::From<SpecError> for TouchError {
     }
 }
 
-impl std::convert::From<time::ParseError> for CertState {
-    fn from(_: time::ParseError) -> Self {
+impl std::convert::From<TimeError> for CertState {
+    fn from(_: TimeError) -> Self {
         CertState::ParseError
     }
 }
@@ -385,6 +397,7 @@ pub mod tests {
     use crate::set;
     use super::DNSName;
     use crate::config::{KubeMonitorConfig, FileMonitorConfig, MonitorConfig};
+    use chrono::DateTime;
 
     const TIME_FORMAT: &str = "%Y-%m-%dT%H:%M:%S%z"; // 2019-10-09T11:50:22+0200
 
@@ -487,7 +500,7 @@ pub mod tests {
         Ingress{
             name: "test".to_string(),
             namespace: "test".to_string(),
-            touched: time::empty_tm(),
+            touched: DateTime::<Utc>::MIN_UTC,
             hosts: [host.to_string()].to_vec(),
         }
     }
@@ -518,8 +531,8 @@ pub mod tests {
             Not Before: Dec  1 11:42:07 2020 GMT
             Not After : Nov 24 11:42:07 2050 GMT
         */
-        assert_eq!(cert.valid_from, time::strptime("2020-12-01T11:42:07+0000", TIME_FORMAT).unwrap());
-        assert_eq!(cert.valid_to, time::strptime("2050-11-24T11:42:07+0000", TIME_FORMAT).unwrap());
+        assert_eq!(cert.valid_from, DateTime::parse_from_str("2020-12-01T11:42:07+0000", TIME_FORMAT).unwrap());
+        assert_eq!(cert.valid_to, DateTime::parse_from_str("2050-11-24T11:42:07+0000", TIME_FORMAT).unwrap());
 
         let config = create_test_kubernetes_config(false).faythe_config;
         let spec = create_test_certspec(cn, sans);
@@ -540,8 +553,8 @@ pub mod tests {
             Not Before: Dec  1 11:42:07 2020 GMT
             Not After : Nov 24 11:42:07 2050 GMT
         */
-        assert_eq!(cert.valid_from, time::strptime("2020-12-01T11:42:07+0000", TIME_FORMAT).unwrap());
-        assert_eq!(cert.valid_to, time::strptime("2050-11-24T11:42:07+0000", TIME_FORMAT).unwrap());
+        assert_eq!(cert.valid_from, DateTime::parse_from_str("2020-12-01T11:42:07+0000", TIME_FORMAT).unwrap());
+        assert_eq!(cert.valid_to, DateTime::parse_from_str("2050-11-24T11:42:07+0000", TIME_FORMAT).unwrap());
 
         let config = create_test_kubernetes_config(false).faythe_config;
         let spec = create_test_certspec(cn, sans);
@@ -559,8 +572,8 @@ pub mod tests {
             Not Before: Dec  1 11:42:07 2020 GMT
             Not After : Nov 24 11:42:07 2050 GMT
         */
-        assert_eq!(cert.valid_from, time::strptime("2020-12-01T11:42:07+0000", TIME_FORMAT).unwrap());
-        assert_eq!(cert.valid_to, time::strptime("2050-11-24T11:42:07+0000", TIME_FORMAT).unwrap());
+        assert_eq!(cert.valid_from, DateTime::parse_from_str("2020-12-01T11:42:07+0000", TIME_FORMAT).unwrap());
+        assert_eq!(cert.valid_to, DateTime::parse_from_str("2050-11-24T11:42:07+0000", TIME_FORMAT).unwrap());
 
         let cn = "cn.longlived";
         let sans = set![cn, "san1.longlived", "san2.shortlived"];
@@ -610,8 +623,8 @@ pub mod tests {
             Not Before: Dec  1 11:41:19 2020 GMT
             Not After : Dec  2 11:41:19 2020 GMT
         */
-        assert_eq!(cert.valid_from, time::strptime("2020-12-01T11:41:19+0000", TIME_FORMAT).unwrap());
-        assert_eq!(cert.valid_to, time::strptime("2020-12-02T11:41:19+0000", TIME_FORMAT).unwrap());
+        assert_eq!(cert.valid_from, DateTime::parse_from_str("2020-12-01T11:41:19+0000", TIME_FORMAT).unwrap());
+        assert_eq!(cert.valid_to, DateTime::parse_from_str("2020-12-02T11:41:19+0000", TIME_FORMAT).unwrap());
 
         let config = create_test_kubernetes_config(false).faythe_config;
         let spec = create_test_certspec(cn, sans);

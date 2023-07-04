@@ -25,6 +25,8 @@ use crate::dns::DNSError;
 use crate::metrics;
 use crate::metrics::MetricsType;
 
+use chrono::Utc;
+
 pub fn process(faythe_config: FaytheConfig, rx: Receiver<CertSpec>) {
 
     let mut queue: VecDeque<IssueOrder> = VecDeque::new();
@@ -82,7 +84,7 @@ fn check_queue(queue: &mut VecDeque<IssueOrder>) -> Result<(), IssuerError> {
                     IssuerError::DNS(dns::DNSError::WrongAnswer(domain)) => {
                         log::data("Wrong DNS answer", &domain);
                         // Retry for two hours. Propagation on gratisdns is pretty slow.
-                        if time::now_utc() < order.challenge_time + time::Duration::minutes(120) {
+                        if Utc::now() < order.challenge_time + chrono::Duration::minutes(120) {
                             queue.push_back(order);
                         } else {
                             log::data("giving up validating dns challenge for spec", &order.spec);
@@ -169,7 +171,7 @@ fn setup_challenge(config: &FaytheConfig, spec: &CertSpec) -> Result<IssueOrder,
         spec: spec.clone(),
         authorizations,
         inner: ord_new,
-        challenge_time: time::now_utc(),
+        challenge_time: Utc::now(),
         auth_dns_servers,
         val_dns_servers,
     })
@@ -179,7 +181,7 @@ struct IssueOrder {
     spec: CertSpec,
     inner: NewOrder<MemoryPersist>,
     authorizations: Vec<Auth<MemoryPersist>>,
-    challenge_time: time::Tm,
+    challenge_time: chrono::DateTime<Utc>,
     auth_dns_servers: HashSet<String>,
     val_dns_servers: HashSet<String>,
 }
