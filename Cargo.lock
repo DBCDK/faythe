@@ -14,7 +14,7 @@ dependencies = [
  "reqwest 0.9.24",
  "serde",
  "serde_json",
- "time",
+ "time 0.1.45",
 ]
 
 [[package]]
@@ -219,7 +219,7 @@ dependencies = [
  "iana-time-zone",
  "js-sys",
  "num-traits",
- "time",
+ "time 0.1.45",
  "wasm-bindgen",
  "winapi 0.3.9",
 ]
@@ -254,7 +254,7 @@ version = "0.12.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "888604f00b3db336d2af898ec3c1d5d0ddf5e6d462220f2ededc33a87ac4bbd5"
 dependencies = [
- "time",
+ "time 0.1.45",
  "url 1.7.2",
 ]
 
@@ -271,7 +271,7 @@ dependencies = [
  "publicsuffix",
  "serde",
  "serde_json",
- "time",
+ "time 0.1.45",
  "try_from",
  "url 1.7.2",
 ]
@@ -583,7 +583,7 @@ dependencies = [
  "serde",
  "serde_derive",
  "serde_json",
- "time",
+ "time 0.2.0",
  "tokio 1.29.1",
  "trust-dns-resolver",
  "url 2.4.0",
@@ -910,7 +910,7 @@ dependencies = [
  "log",
  "net2",
  "rustc_version",
- "time",
+ "time 0.1.45",
  "tokio 0.1.22",
  "tokio-buf",
  "tokio-executor",
@@ -1825,7 +1825,7 @@ dependencies = [
  "serde",
  "serde_json",
  "serde_urlencoded 0.5.5",
- "time",
+ "time 0.1.45",
  "tokio 0.1.22",
  "tokio-executor",
  "tokio-io",
@@ -2351,6 +2351,12 @@ dependencies = [
  "wasi 0.10.0+wasi-snapshot-preview1",
  "winapi 0.3.9",
 ]
+
+[[package]]
+name = "time"
+version = "0.2.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "fcc26de0a81a07c8352b548977862908fa9863e0e6e4f0eb36b2a9f4f8845585"
 
 [[package]]
 name = "tinyvec"
