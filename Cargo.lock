@@ -583,7 +583,6 @@ dependencies = [
  "serde",
  "serde_derive",
  "serde_json",
- "time",
  "tokio 1.29.1",
  "trust-dns-resolver",
  "url 2.4.0",

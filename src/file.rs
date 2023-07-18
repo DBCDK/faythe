@@ -1,4 +1,3 @@
-extern crate time;
 extern crate walkdir;
 
 

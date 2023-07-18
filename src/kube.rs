@@ -2,7 +2,6 @@
 extern crate serde;
 extern crate serde_json;
 extern crate base64;
-extern crate time;
 
 use serde_json::{Value};
 use serde_json::json;
@@ -22,12 +21,14 @@ use acme_lib::Certificate;
 
 use base64::Engine;
 
+use chrono::Utc;
+
 #[derive(Debug, Clone)]
 pub struct Ingress {
     pub name: String,
     pub namespace: String,
     pub hosts: Vec<String>,
-    pub touched: time::Tm,
+    pub touched: chrono::DateTime<Utc>,
 }
 
 #[derive(Debug, Clone)]
@@ -77,7 +78,7 @@ pub fn get_ingresses(config: &KubeMonitorConfig) -> Result<Vec<Ingress>, KubeErr
         let rules = vec(&i["spec"]["rules"])?;
         let touched = match &config.touch_annotation {
             Some(a) => tm(i["metadata"]["annotations"].get(&a)),
-            None => time::empty_tm()
+            None => chrono::DateTime::<Utc>::MIN_UTC,
         };
         ingresses.push(Ingress{
             name: sr(&i["metadata"]["name"])?,
@@ -135,12 +136,12 @@ fn sr(subject: &Value) -> Result<String, KubeError> {
     }
 }
 
-fn tm(subject: Option<&Value>) -> time::Tm {
+fn tm(subject: Option<&Value>) -> chrono::DateTime<Utc> {
     let a = subject.and_then(|s| s.as_str());
     match a {
         // assume "now" if there is something non-parsable in there
-        Some(a) => time::strptime(&a, self::TIME_FORMAT).unwrap_or(time::now_utc()),
-        _ => time::empty_tm()
+        Some(a) => chrono::DateTime::parse_from_str(&a, self::TIME_FORMAT).map(std::convert::Into::into).unwrap_or(Utc::now()),
+        _ => chrono::DateTime::<Utc>::MIN_UTC,
     }
 }
 
@@ -261,14 +262,13 @@ impl CertSpecable for Ingress {
     fn touch(&self, config: &ConfigContainer) -> Result<(), TouchError> {
         let monitor_config = config.get_kube_monitor_config()?;
         match &monitor_config.touch_annotation {
-            Some(a) => Ok(self.annotate(&a,
-                                     &time::strftime(TIME_FORMAT, &time::now_utc())?)?),
+            Some(a) => Ok(self.annotate(&a, &Utc::now().format(TIME_FORMAT).to_string())?),
             None => Ok(())
         }
     }
 
     fn should_retry(&self, config: &ConfigContainer) -> bool {
-        time::now_utc() > self.touched + time::Duration::milliseconds(config.faythe_config.issue_grace as i64)
+        Utc::now() > self.touched + chrono::Duration::milliseconds(config.faythe_config.issue_grace as i64)
     }
 }
 
@@ -303,15 +303,15 @@ impl std::convert::From<base64::DecodeError> for KubeError {
         KubeError::Format
     }
 }
-impl std::convert::From<time::ParseError> for KubeError {
-    fn from(err: time::ParseError) -> Self {
+impl std::convert::From<chrono::ParseError> for KubeError {
+    fn from(err: chrono::ParseError) -> Self {
         log::error("Failed to parse timestamp", &err);
         KubeError::Format
     }
 }
 
-impl std::convert::From<time::ParseError> for TouchError {
-    fn from(_err: time::ParseError) -> Self {
+impl std::convert::From<chrono::ParseError> for TouchError {
+    fn from(_err: chrono::ParseError) -> Self {
         TouchError::Failed
     }
 }

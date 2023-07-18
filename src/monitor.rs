@@ -1,5 +1,3 @@
-extern crate time;
-
 use std::thread;
 use std::time::Duration;
 
@@ -23,6 +21,8 @@ use std::prelude::v1::Vec;
 
 use crate::metrics;
 use crate::metrics::MetricsType;
+
+use chrono::Utc;
 
 pub fn monitor_k8s(config: ConfigContainer, tx: Sender<CertSpec>) {
     log::info("k8s monitoring-started");
@@ -131,7 +131,6 @@ mod tests {
     use crate::mpsc;
     use crate::mpsc::{Receiver, Sender};
     use std::collections::HashSet;
-    use std::ops::Add;
 
     fn create_channel() -> (Sender<CertSpec>, Receiver<CertSpec>) {
         mpsc::channel()
@@ -141,7 +140,7 @@ mod tests {
         [Ingress {
             name: "test".to_string(),
             namespace: "test".to_string(),
-            touched: time::empty_tm(),
+            touched: chrono::DateTime::<Utc>::MIN_UTC,
             hosts: [host.clone()].to_vec(),
         }]
         .to_vec()
@@ -156,8 +155,8 @@ mod tests {
             cert: Cert {
                 cn: host.clone(),
                 sans,
-                valid_from: time::now_utc(),
-                valid_to: time::now_utc().add(time::Duration::days(valid_days)),
+                valid_from: Utc::now(),
+                valid_to: Utc::now() + chrono::Duration::days(valid_days),
             },
             key: vec![],
         }
