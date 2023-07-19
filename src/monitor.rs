@@ -22,8 +22,6 @@ use std::prelude::v1::Vec;
 use crate::metrics;
 use crate::metrics::MetricsType;
 
-use chrono::Utc;
-
 pub fn monitor_k8s(config: ConfigContainer, tx: Sender<CertSpec>) {
     log::info("k8s monitoring-started");
     let monitor_config = config.get_kube_monitor_config().unwrap();
