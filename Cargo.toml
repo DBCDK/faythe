@@ -10,7 +10,7 @@ serde_derive = "1"
 serde_json = "1"
 openssl = "0"
 base64 = "0"
-acme-lib = { git = 'https://github.com/DBCDK/acme-lib', branch = 'add-sans-individually' }
+acme-lib = { git = 'https://github.com/DBCDK/acme-lib', branch = 'dbc-fork' }
 regex = "1"
 lazy_static = "1"
 walkdir = "2"
