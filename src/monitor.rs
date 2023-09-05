@@ -21,7 +21,7 @@ use std::prelude::v1::Vec;
 
 use crate::metrics;
 use crate::metrics::MetricsType;
-#[allow(unused_imports)]
+#[cfg(test)]
 use chrono::Utc;
 
 pub fn monitor_k8s(config: ConfigContainer, tx: Sender<CertSpec>) {
