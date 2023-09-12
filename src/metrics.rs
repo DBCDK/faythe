@@ -3,8 +3,8 @@ use prometheus_exporter_base::PrometheusInstance;
 use std::collections::HashMap;
 use std::sync::RwLock;
 
-use crate::log;
 
+use crate::log;
 #[derive(Debug, Clone, Default)]
 struct MyOptions {}
 
@@ -39,7 +39,11 @@ pub fn new_event(cert_name: &str, event_type: MetricsType) {
 
 #[tokio::main]
 pub async fn serve(port: u16) {
-    let addr = ([0, 0, 0, 0], port).into();
+    let addr = ServerOptions {
+        addr:   ([0, 0, 0, 0], port).into(),
+        authorization: Authorization::None,
+    };
+
     log::info(&format!("starting metrics server on port: {}", port));
 
     render_prometheus(
