@@ -54,7 +54,7 @@
         cargo
         crate2nix
         openssl.dev
-        pkgconfig
+        pkg-config
         rustc
         zlib.dev
         dnsutils # runtime
