@@ -64,8 +64,15 @@ fn main() {
     let config_file = m.get_one::<String>("config").unwrap().to_owned();
     let config = config::parse_config_file(&config_file);
     match config {
-        Ok(c) => if !config_check { run(&c); },
-        Err(e) => { eprintln!("config-file parse error: {}", &e); process::exit(1); }
+        Ok(c) => {
+            if !config_check {
+                run(&c);
+            }
+        }
+        Err(e) => {
+            eprintln!("config-file parse error: {}", &e);
+            process::exit(1);
+        }
     }
 }
 
@@ -74,12 +81,12 @@ fn run(config: &FaytheConfig) {
 
     let mut threads = Vec::new();
     for c in &config.kube_monitor_configs {
-        let container = ConfigContainer{
+        let container = ConfigContainer {
             faythe_config: config.clone(),
-            monitor_config: MonitorConfig::Kube(c.to_owned())
+            monitor_config: MonitorConfig::Kube(c.to_owned()),
         };
         let tx_ = tx.clone();
-        threads.push(thread::spawn(move || { monitor::monitor_k8s(container,tx_) }));
+        threads.push(thread::spawn(move || monitor::monitor_k8s(container, tx_)));
     }
     for c in &config.file_monitor_configs {
         let container = ConfigContainer {
@@ -102,10 +109,12 @@ fn run(config: &FaytheConfig) {
         }));
     }
     let config_ = config.clone();
-    threads.push(thread::spawn(move || { issuer::process(config_, rx) }));
+    threads.push(thread::spawn(move || issuer::process(config_, rx)));
 
     if threads.len() < 2 {
-        panic!("No monitors started! Did you forget to add monitor configuration to the config file?")
+        panic!(
+            "No monitors started! Did you forget to add monitor configuration to the config file?"
+        )
     }
 
     let metrics_port = config.metrics_port;
