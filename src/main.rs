@@ -5,6 +5,8 @@ extern crate lazy_static;
 
 extern crate clap;
 
+use clap::{arg, command};
+
 use std::{process, thread};
 
 use std::sync::mpsc;
@@ -44,21 +46,22 @@ fn main() {
     env_logger::init();
     log::init(APP_NAME.to_string()).unwrap();
 
-    let args = clap::App::new("faythe")
-         .arg(clap::Arg::with_name("config-check")
-             .long("config-check")
-             .help("Parses Faythe config file and exits")
-             .takes_value(false)
-             .required(false))
-         .arg(clap::Arg::with_name("config")
-            .value_name("config-file")
-            .help("Path to Faythe config file (JSON)")
-            .takes_value(true)
-            .required(true));
+    let args = command!()
+        .arg(
+            arg!(configcheck: "Parses Faythe config file and exits")
+                .long("config-check")
+                .action(clap::ArgAction::SetTrue),
+        )
+        .arg(
+            arg!(config: "Path to Faythe config file (JSON)")
+                .help("Path to Faythe config file (JSON)")
+                .required(true),
+        );
 
     let m = args.get_matches();
-    let config_check = m.is_present("config-check");
-    let config_file = m.value_of("config").unwrap().to_owned();
+
+    let config_check = m.get_one::<bool>("configcheck").unwrap();
+    let config_file = m.get_one::<String>("config").unwrap().to_owned();
     let config = config::parse_config_file(&config_file);
     match config {
         Ok(c) => if !config_check { run(&c); },
