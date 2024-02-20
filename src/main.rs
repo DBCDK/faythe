@@ -5,6 +5,8 @@ extern crate lazy_static;
 
 extern crate clap;
 
+use clap::{arg, command};
+
 use std::{process, thread};
 
 use std::sync::mpsc;
@@ -44,25 +46,33 @@ fn main() {
     env_logger::init();
     log::init(APP_NAME.to_string()).unwrap();
 
-    let args = clap::App::new("faythe")
-         .arg(clap::Arg::with_name("config-check")
-             .long("config-check")
-             .help("Parses Faythe config file and exits")
-             .takes_value(false)
-             .required(false))
-         .arg(clap::Arg::with_name("config")
-            .value_name("config-file")
-            .help("Path to Faythe config file (JSON)")
-            .takes_value(true)
-            .required(true));
+    let args = command!()
+        .arg(
+            arg!(configcheck: "Parses Faythe config file and exits")
+                .long("config-check")
+                .action(clap::ArgAction::SetTrue),
+        )
+        .arg(
+            arg!(config: "Path to Faythe config file (JSON)")
+                .help("Path to Faythe config file (JSON)")
+                .required(true),
+        );
 
     let m = args.get_matches();
-    let config_check = m.is_present("config-check");
-    let config_file = m.value_of("config").unwrap().to_owned();
+
+    let config_check = m.get_one::<bool>("configcheck").unwrap();
+    let config_file = m.get_one::<String>("config").unwrap().to_owned();
     let config = config::parse_config_file(&config_file);
     match config {
-        Ok(c) => if !config_check { run(&c); },
-        Err(e) => { eprintln!("config-file parse error: {}", &e); process::exit(1); }
+        Ok(c) => {
+            if !config_check {
+                run(&c);
+            }
+        }
+        Err(e) => {
+            eprintln!("config-file parse error: {}", &e);
+            process::exit(1);
+        }
     }
 }
 
@@ -71,12 +81,12 @@ fn run(config: &FaytheConfig) {
 
     let mut threads = Vec::new();
     for c in &config.kube_monitor_configs {
-        let container = ConfigContainer{
+        let container = ConfigContainer {
             faythe_config: config.clone(),
-            monitor_config: MonitorConfig::Kube(c.to_owned())
+            monitor_config: MonitorConfig::Kube(c.to_owned()),
         };
         let tx_ = tx.clone();
-        threads.push(thread::spawn(move || { monitor::monitor_k8s(container,tx_) }));
+        threads.push(thread::spawn(move || monitor::monitor_k8s(container, tx_)));
     }
     for c in &config.file_monitor_configs {
         let container = ConfigContainer {
@@ -99,10 +109,12 @@ fn run(config: &FaytheConfig) {
         }));
     }
     let config_ = config.clone();
-    threads.push(thread::spawn(move || { issuer::process(config_, rx) }));
+    threads.push(thread::spawn(move || issuer::process(config_, rx)));
 
     if threads.len() < 2 {
-        panic!("No monitors started! Did you forget to add monitor configuration to the config file?")
+        panic!(
+            "No monitors started! Did you forget to add monitor configuration to the config file?"
+        )
     }
 
     let metrics_port = config.metrics_port;
