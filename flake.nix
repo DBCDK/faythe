@@ -3,12 +3,11 @@
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-23.11";
-    utils.url = "github:numtide/flake-utils";
     crane.url = "github:ipetkov/crane";
     crane.inputs.nixpkgs.follows = "nixpkgs";
   };
 
-  outputs = { self, crane, nixpkgs, utils }:
+  outputs = { self, crane, nixpkgs }:
   let
     pname = "faythe";
     system = "x86_64-linux";
