@@ -10,17 +10,17 @@ jobs:
   bump-o-matic:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2.6.0
-    - uses: cachix/install-nix-action@v18
+    - uses: actions/checkout@v4
+    - uses: cachix/install-nix-action@v27
       with:
-        nix_path: nixpkgs=channel:nixos-23.11
+        nix_path: nixpkgs=channel:nixos-24.05
     - name: Update dependencies
       run: |
         nix --experimental-features "nix-command flakes" flake update
         nix --experimental-features "nix-command flakes" develop --command cargo update
     - name: Create pull request
       id: pr
-      uses: peter-evans/create-pull-request@v3.10.0
+      uses: peter-evans/create-pull-request@v6
       with:
         commit-message: "bump-o-matic: update dependencies"
         branch: bump-o-matic
