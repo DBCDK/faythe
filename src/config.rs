@@ -91,11 +91,26 @@ pub struct ConfigContainer {
 #[derive(Clone, Deserialize, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct Zone {
-    pub server: String,
-    pub key: String,
+    pub auth_dns_server: String,
+    pub challenge_driver: ChallengeDriver,
     pub challenge_suffix: Option<String>,
     #[serde(default = "default_issue_wildcard_certs")]
     pub issue_wildcard_certs: bool,
+}
+
+#[derive(Clone, Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
+#[serde(rename_all = "lowercase")]
+pub enum ChallengeDriver {
+    NSUpdate(NSUpdateDriver),
+    NoOp,
+}
+
+#[derive(Clone, Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct NSUpdateDriver {
+    pub server: String,
+    pub key: String,
 }
 
 impl ConfigContainer {

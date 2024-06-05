@@ -309,7 +309,7 @@ fn init_resolvers<'l>(config: &FaytheConfig) -> HashMap<String, Resolver> {
         };
     };
 
-    config.zones.iter().for_each(|(_, z)| create_resolvers(&z.server, &mut resolvers));
+    config.zones.iter().for_each(|(_, z)| create_resolvers(&z.auth_dns_server, &mut resolvers));
     config.val_dns_servers.iter().for_each(|s| create_resolvers(&s, &mut resolvers));
     resolvers
 }
