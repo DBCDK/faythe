@@ -139,9 +139,9 @@ impl CertSpec {
     }
     pub fn get_auth_dns_servers(&self, config: &FaytheConfig) -> Result<HashSet<String>, SpecError> {
         let mut res = HashSet::new();
-        res.insert(self.cn.find_zone(&config)?.server.clone());
+        res.insert(self.cn.find_zone(&config)?.auth_dns_server.clone());
         for s in &self.sans {
-            res.insert(s.find_zone(&config)?.server.clone());
+            res.insert(s.find_zone(&config)?.auth_dns_server.clone());
         }
         Ok(res)
     }
@@ -396,7 +396,7 @@ pub mod tests {
     use std::collections::HashMap;
     use crate::set;
     use super::DNSName;
-    use crate::config::{KubeMonitorConfig, FileMonitorConfig, MonitorConfig};
+    use crate::config::{ChallengeDriver, KubeMonitorConfig, FileMonitorConfig, MonitorConfig};
     use chrono::DateTime;
 
     const TIME_FORMAT: &str = "%Y-%m-%dT%H:%M:%S%z"; // 2019-10-09T11:50:22+0200
@@ -432,20 +432,20 @@ pub mod tests {
     fn create_zones(issue_wildcard_certs: bool) -> HashMap<String, Zone> {
         let mut zones = HashMap::new();
         zones.insert(String::from("unit.test"), Zone{
-            server: String::from("ns.unit.test"),
-            key: String::new(),
+            auth_dns_server: String::from("ns.unit.test"),
+            challenge_driver: ChallengeDriver::NoOp,
             challenge_suffix: None,
             issue_wildcard_certs
         });
         zones.insert(String::from("alternative.unit.test"), Zone{
-            server: String::from("ns.alternative.unit.test"),
-            key: String::new(),
+            auth_dns_server: String::from("ns.alternative.unit.test"),
+            challenge_driver: ChallengeDriver::NoOp,
             challenge_suffix: None,
             issue_wildcard_certs
         });
         zones.insert(String::from("suffixed.unit.test"), Zone{
-            server: String::from("ns.suffixed.unit.test"),
-            key: String::new(),
+            auth_dns_server: String::from("ns.suffixed.unit.test"),
+            challenge_driver: ChallengeDriver::NoOp,
             challenge_suffix: Some(String::from("acme.example.com")),
             issue_wildcard_certs
         });
@@ -664,19 +664,19 @@ pub mod tests {
 
             let host: DNSName = DNSName::try_from(&String::from("host1.subdivision.unit.test")).unwrap();
             let z = host.find_zone(&config.faythe_config).unwrap();
-            assert_eq!(z.server, "ns.unit.test");
+            assert_eq!(z.auth_dns_server, "ns.unit.test");
 
             let host: DNSName = DNSName::try_from(&String::from("host1.subdivision.alternative.unit.test")).unwrap();
             let z = host.find_zone(&config.faythe_config).unwrap();
-            assert_eq!(z.server, "ns.alternative.unit.test");
+            assert_eq!(z.auth_dns_server, "ns.alternative.unit.test");
 
             let host: DNSName = DNSName::try_from(&String::from("host1.subdivision.other-alternative.unit.test")).unwrap();
             let z = host.find_zone(&config.faythe_config).unwrap();
-            assert_eq!(z.server, "ns.unit.test");
+            assert_eq!(z.auth_dns_server, "ns.unit.test");
 
             let host: DNSName = DNSName::try_from(&String::from("unit.test")).unwrap();
             let z = host.find_zone(&config.faythe_config).unwrap();
-            assert_eq!(z.server, "ns.unit.test");
+            assert_eq!(z.auth_dns_server, "ns.unit.test");
         }
     }
 

@@ -17,8 +17,13 @@
    "lets_encrypt_email": "le@example.com",
    "zones": {
       "acme.example.com": {
-        "server": "ns.example.com",
-        "key": "acme.example.com.key"
+        "auth_dns_server": "ns.example.com",
+        "challenge_driver": {
+          "nsupdate": {
+            "server": "ns.example.com",
+            "key": "acme.example.com.key"
+          }
+        }
       }
     },
    "val_dns_servers": ["8.8.8.8", "8.8.4.4"]
