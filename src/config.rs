@@ -104,6 +104,7 @@ pub struct Zone {
 pub enum ChallengeDriver {
     NSUpdate(NSUpdateDriver),
     NoOp,
+    Webhook(WebhookDriver),
 }
 
 #[derive(Clone, Deserialize, Debug)]
@@ -111,6 +112,19 @@ pub enum ChallengeDriver {
 pub struct NSUpdateDriver {
     pub server: String,
     pub key: String,
+}
+
+#[derive(Clone, Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct WebhookDriver {
+    #[serde(deserialize_with = "deserialize_url")]
+    pub url: Url,
+    #[serde(default = "default_timeout_secs")]
+    pub timeout_secs: u8,
+}
+
+fn default_timeout_secs() -> u8 {
+    10
 }
 
 impl ConfigContainer {

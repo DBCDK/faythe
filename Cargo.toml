@@ -25,6 +25,7 @@ vaultrs-login = "0"
 url = "2"
 chrono = "0"
 num-traits = "0"
+reqwest = { version = "0", features = ["json"] }
 
 [profile.release]
 panic = "abort"
