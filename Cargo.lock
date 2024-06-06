@@ -476,6 +476,7 @@ dependencies = [
  "openssl",
  "prometheus_exporter_base",
  "regex",
+ "reqwest",
  "serde",
  "serde_derive",
  "serde_json",

@@ -17,6 +17,7 @@ use crate::exec::ExecErrorInfo;
 use crate::config::{ChallengeDriver as DriverConfig};
 
 mod nsupdate;
+mod webhook;
 
 #[derive(Debug)]
 pub enum DNSError {
@@ -25,7 +26,8 @@ pub enum DNSError {
     OutputFormat,
     ResolveError(ResolveError),
     WrongAnswer(String),
-    WrongSpec
+    WrongSpec,
+    Reqwest(reqwest::Error),
 }
 
 pub trait ChallengeDriver {
@@ -40,7 +42,10 @@ pub fn add(config: &FaytheConfig, name: &DNSName, proof: &String) -> Result<(), 
         DriverConfig::NSUpdate(nsupdate) => {
             nsupdate.add(&challenge_host, proof)
         },
-        DriverConfig::NoOp => Ok(())
+        DriverConfig::NoOp => Ok(()),
+        DriverConfig::Webhook(webhook) => {
+            webhook.add(&challenge_host, proof)
+        }
     }
 }
 
@@ -51,7 +56,10 @@ pub fn delete(config: &FaytheConfig, spec: &CertSpec) -> Result<(), DNSError> {
         DriverConfig::NSUpdate(nsupdate) => {
             nsupdate.delete(&host)?
         },
-        DriverConfig::NoOp => ()
+        DriverConfig::NoOp => (),
+        DriverConfig::Webhook(webhook) => {
+            webhook.delete(&host)?
+        }
     };
     for s in &spec.sans {
         let zone = s.find_zone(&config)?;
@@ -60,7 +68,10 @@ pub fn delete(config: &FaytheConfig, spec: &CertSpec) -> Result<(), DNSError> {
             DriverConfig::NSUpdate(nsupdate) => {
                 nsupdate.delete(&host)?
             },
-            DriverConfig::NoOp => ()
+            DriverConfig::NoOp => (),
+            DriverConfig::Webhook(webhook) => {
+                webhook.delete(&host)?
+            }
         }
     }
     Ok(())
@@ -123,5 +134,12 @@ impl std::convert::From<SpecError> for DNSError {
     fn from(err: SpecError) -> Self {
         log::error("Faythe does not know a dns-server authoritative for", &err);
         DNSError::WrongSpec
+    }
+}
+
+impl std::convert::From<reqwest::Error> for DNSError {
+    fn from(err: reqwest::Error) -> Self {
+        log::error("Error with webhook invocation", &err);
+        DNSError::Reqwest(err)
     }
 }
