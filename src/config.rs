@@ -91,11 +91,40 @@ pub struct ConfigContainer {
 #[derive(Clone, Deserialize, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct Zone {
-    pub server: String,
-    pub key: String,
+    pub auth_dns_server: String,
+    pub challenge_driver: ChallengeDriver,
     pub challenge_suffix: Option<String>,
     #[serde(default = "default_issue_wildcard_certs")]
     pub issue_wildcard_certs: bool,
+}
+
+#[derive(Clone, Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
+#[serde(rename_all = "lowercase")]
+pub enum ChallengeDriver {
+    NSUpdate(NSUpdateDriver),
+    NoOp,
+    Webhook(WebhookDriver),
+}
+
+#[derive(Clone, Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct NSUpdateDriver {
+    pub server: String,
+    pub key: String,
+}
+
+#[derive(Clone, Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
+pub struct WebhookDriver {
+    #[serde(deserialize_with = "deserialize_url")]
+    pub url: Url,
+    #[serde(default = "default_timeout_secs")]
+    pub timeout_secs: u8,
+}
+
+fn default_timeout_secs() -> u8 {
+    10
 }
 
 impl ConfigContainer {
