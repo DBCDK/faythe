@@ -54,6 +54,14 @@
       };
     };
 
+    checks.${system}.sample-configs = pkgs.runCommandNoCC "check-sample-configs" { nativeBuildInputs = [ pkgs.${pname} ]; } ''
+      D=${./config-samples}
+      for F in $(ls -1 $D); do
+        echo "Testing: $D/$F"
+        faythe $D/$F --config-check >>$out
+      done
+    '';
+
     devShell.${system} = with pkgs; mkShell {
       buildInputs = [
         rust-analyzer
