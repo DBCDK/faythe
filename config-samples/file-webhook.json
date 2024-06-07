@@ -1,0 +1,27 @@
+{
+  "file_monitor_configs": [{
+    "directory": "test",
+    "prune": false,
+    "specs": [{
+      "name": "jth-test",
+      "cn": "jth.faythe-test.acme.example.com",
+      "sans": [
+        "san1.jth.faythe-test.acme.example.com",
+        "san2.jth.faythe-test.acme.example.com"
+      ]
+    }]
+  }],
+   "lets_encrypt_url": "https://acme-staging-v02.api.letsencrypt.org/directory",
+   "lets_encrypt_email": "le@example.com",
+   "zones": {
+      "acme.example.com": {
+        "auth_dns_server": "ns.example.com",
+        "challenge_driver": {
+          "webhook": {
+            "url": "localhost:8080"
+          }
+        }
+      }
+    },
+   "val_dns_servers": ["8.8.8.8", "8.8.4.4"]
+}

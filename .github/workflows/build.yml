@@ -8,4 +8,4 @@ jobs:
     - uses: cachix/install-nix-action@v27
       with:
         nix_path: nixpkgs=channel:nixos-24.05
-    - run: nix --experimental-features "nix-command flakes" build
+    - run: nix --experimental-features "nix-command flakes" check
