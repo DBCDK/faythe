@@ -78,22 +78,22 @@ pub fn delete(config: &FaytheConfig, spec: &CertSpec) -> Result<(), DNSError> {
 }
 
 pub fn query(resolver: &Resolver, host: &DNSName, proof: &String) -> Result<(), DNSError> {
-    let c_host = challenge_host(host, None);
-    match resolver.txt_lookup(&c_host) {
+    let challenge_host = challenge_host(host, None);
+    match resolver.txt_lookup(&challenge_host) {
         Ok(res) => {
             let trim_chars: &[_] = &['"', '\n'];
-            res.iter().find(|rr|
-                rr.iter().find(|r| {
-                    match String::from_utf8((*r).to_vec()) {
+            res.iter().find(|record_set|
+                record_set.iter().find(|record| {
+                    match String::from_utf8((*record).to_vec()) {
                         Ok(txt) => &txt.trim_matches(trim_chars) == proof,
                         Err(_) => false,
                     }
                 }).is_some()
-            ).ok_or(DNSError::WrongAnswer(c_host.clone())).and(Ok(()))
+            ).ok_or(DNSError::WrongAnswer(challenge_host.clone())).and(Ok(()))
         },
         Err(e) => {
             match e.kind() {
-                ResolveErrorKind::NoRecordsFound{..} => Err(DNSError::WrongAnswer(c_host.clone())),
+                ResolveErrorKind::NoRecordsFound{..} => Err(DNSError::WrongAnswer(challenge_host.clone())),
                 _ => Err(DNSError::ResolveError(e))
             }
         }
@@ -102,8 +102,8 @@ pub fn query(resolver: &Resolver, host: &DNSName, proof: &String) -> Result<(), 
 
 fn challenge_host(host: &DNSName, zone: Option<&Zone>) -> String {
     let suffix = match zone {
-        Some(z) => match &z.challenge_suffix {
-            Some(s) => format!(".{}", s),
+        Some(zone) => match &zone.challenge_suffix {
+            Some(suffix) => format!(".{}", suffix),
             None => String::new()
         }
         None => String::new()
@@ -112,8 +112,8 @@ fn challenge_host(host: &DNSName, zone: Option<&Zone>) -> String {
 }
 
 impl From<std::io::Error> for DNSError {
-    fn from(e: std::io::Error) -> DNSError {
-        DNSError::IO(e)
+    fn from(err: std::io::Error) -> DNSError {
+        DNSError::IO(err)
     }
 }
 

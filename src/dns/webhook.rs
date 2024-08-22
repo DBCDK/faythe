@@ -3,7 +3,10 @@ use crate::dns::DNSError;
 use super::ChallengeDriver;
 use crate::config::WebhookDriver;
 
+use reqwest::blocking::Client;
 use std::collections::HashMap;
+use std::convert::Into;
+use std::time::Duration;
 
 impl ChallengeDriver for WebhookDriver {
   fn add(&self, challenge_host: &String, proof: &String) -> Result<(), DNSError> {
@@ -49,10 +52,9 @@ static APP_USER_AGENT: &str = concat!(
 );
 
 impl WebhookDriver {
-  
-  fn get_client(&self) -> Result<reqwest::blocking::Client, reqwest::Error> {
-    let client = reqwest::blocking::Client::builder();
-    let client = client.timeout(std::time::Duration::from_secs(self.timeout_secs as u64));
+  fn get_client(&self) -> Result<Client, reqwest::Error> {
+    let client = Client::builder();
+    let client = client.timeout(Duration::from_secs(self.timeout_secs as u64));
     let client = client.user_agent(APP_USER_AGENT);
     client.build()
   }
@@ -63,7 +65,7 @@ impl WebhookDriver {
       .json(&body)
       .send()
       .and(Ok(()))
-      .map_err(std::convert::Into::into)
+      .map_err(Into::into)
   }
 
   fn exec_delete(&self, body: Payload) -> Result<(), DNSError> {
@@ -72,6 +74,6 @@ impl WebhookDriver {
       .json(&body)
       .send()
       .and(Ok(()))
-      .map_err(std::convert::Into::into)
+      .map_err(Into::into)
   }
 }

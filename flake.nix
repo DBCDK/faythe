@@ -55,10 +55,10 @@
     };
 
     checks.${system}.sample-configs = pkgs.runCommandNoCC "check-sample-configs" { nativeBuildInputs = [ pkgs.${pname} ]; } ''
-      D=${./config-samples}
-      for F in $(ls -1 $D); do
-        echo "Testing: $D/$F"
-        faythe $D/$F --config-check >>$out
+      DIR=${./config-samples}
+      for FILE in $(ls -1 $DIR); do
+        echo "Testing: $DIR/$FILE"
+        faythe $DIR/$FILE --config-check >>$out
       done
     '';
 

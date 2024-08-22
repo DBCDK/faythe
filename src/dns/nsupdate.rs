@@ -33,17 +33,17 @@ impl NSUpdateDriver {
 
     fn add_cmd(&self, name: &String, proof: &String) -> String {
         format!("server {server}\n\
-                 update add {host} 120 TXT \"{proof}\"\n\
-                 send\n",
-                 server=&self.server,
-                host=&name,
-                proof=&proof)
+            update add {host} 120 TXT \"{proof}\"\n\
+            send\n",
+            server=&self.server,
+            host=&name,
+            proof=&proof)
     }
       
     fn delete_cmd(&self, name: &String) -> String {
         format!("server {server}\n\
-                update delete {host} TXT\n\
-                send\n",
+            update delete {host} TXT\n\
+            send\n",
             server=&self.server,
             host=&name)
     }
