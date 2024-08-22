@@ -639,44 +639,44 @@ pub mod tests {
             let config = create_test_kubernetes_config(false);
 
             let host: DNSName = DNSName::try_from(&String::from("host1.subdivision.unit.wrongtest")).unwrap();
-            let z = host.find_zone(&config.faythe_config);
-            assert!(z.is_err());
+            let zone = host.find_zone(&config.faythe_config);
+            assert!(zone.is_err());
 
             let host: DNSName = DNSName::try_from(&String::from("host1.subdivision.foo.test")).unwrap();
-            let z = host.find_zone(&config.faythe_config);
-            assert!(z.is_err());
+            let zone = host.find_zone(&config.faythe_config);
+            assert!(zone.is_err());
 
             let host: DNSName = DNSName::try_from(&String::from("test")).unwrap();
-            let z = host.find_zone(&config.faythe_config);
-            assert!(z.is_err());
+            let zone = host.find_zone(&config.faythe_config);
+            assert!(zone.is_err());
 
             let host: DNSName = DNSName::try_from(&String::from("google.com")).unwrap();
-            let z = host.find_zone(&config.faythe_config);
-            assert!(z.is_err());
+            let zone = host.find_zone(&config.faythe_config);
+            assert!(zone.is_err());
 
             let host: DNSName = DNSName::try_from(&String::from("host1.subdivision.unit.test")).unwrap();
-            let z = host.find_zone(&config.faythe_config);
-            assert!(z.is_ok());
+            let zone = host.find_zone(&config.faythe_config);
+            assert!(zone.is_ok());
         }
 
         {
             let config = create_test_kubernetes_config(false);
 
             let host: DNSName = DNSName::try_from(&String::from("host1.subdivision.unit.test")).unwrap();
-            let z = host.find_zone(&config.faythe_config).unwrap();
-            assert_eq!(z.auth_dns_server, "ns.unit.test");
+            let zone = host.find_zone(&config.faythe_config).unwrap();
+            assert_eq!(zone.auth_dns_server, "ns.unit.test");
 
             let host: DNSName = DNSName::try_from(&String::from("host1.subdivision.alternative.unit.test")).unwrap();
-            let z = host.find_zone(&config.faythe_config).unwrap();
-            assert_eq!(z.auth_dns_server, "ns.alternative.unit.test");
+            let zone = host.find_zone(&config.faythe_config).unwrap();
+            assert_eq!(zone.auth_dns_server, "ns.alternative.unit.test");
 
             let host: DNSName = DNSName::try_from(&String::from("host1.subdivision.other-alternative.unit.test")).unwrap();
-            let z = host.find_zone(&config.faythe_config).unwrap();
-            assert_eq!(z.auth_dns_server, "ns.unit.test");
+            let zone = host.find_zone(&config.faythe_config).unwrap();
+            assert_eq!(zone.auth_dns_server, "ns.unit.test");
 
             let host: DNSName = DNSName::try_from(&String::from("unit.test")).unwrap();
-            let z = host.find_zone(&config.faythe_config).unwrap();
-            assert_eq!(z.auth_dns_server, "ns.unit.test");
+            let zone = host.find_zone(&config.faythe_config).unwrap();
+            assert_eq!(zone.auth_dns_server, "ns.unit.test");
         }
     }
 
