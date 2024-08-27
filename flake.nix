@@ -14,6 +14,12 @@
     pkgs = import nixpkgs {
       inherit system;
       overlays = [ crane-overlay self.overlays.default ];
+      config = {
+        allowUnfreePredicate = pkg:
+          builtins.elem (builtins.parseDrvName (pkg.name or pkg.pname)).name [
+            "vault"
+          ];
+      };
     };
     crane-overlay = final: prev: {
       # crane's lib is not exposed as an overlay in its flake (should be added
@@ -25,6 +31,7 @@
   in {
     packages.${system}.${pname} = pkgs.${pname};
     defaultPackage.${system} = pkgs.${pname};
+    checks.${system}.vault = pkgs.callPackage ./nixos/vault-test.nix {};
 
     overlays.default = final: prev: {
       "${pname}" = final.craneLib.buildPackage {
