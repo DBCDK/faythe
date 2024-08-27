@@ -105,7 +105,10 @@ fn run(config: &FaytheConfig) {
         };
         let tx_ = tx.clone();
         threads.push(thread::spawn(move || {
-            monitor::monitor_vault(container, tx_)
+            // Spawning the runtime for each (OS-)thread is redundant, but
+            // minimally invasive to the rest of the main setup.
+            let rt = tokio::runtime::Runtime::new().unwrap();
+            rt.block_on(monitor::monitor_vault(container, tx_))
         }));
     }
     let config_ = config.clone();

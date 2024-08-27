@@ -102,7 +102,7 @@ impl std::convert::From<ClientError> for VaultError {
 
 // Returns a hashmap that associates a certificate with it's path name in vault
 pub fn list(config: &VaultMonitorConfig) -> Result<HashMap<CertName, VaultCert>, VaultError> {
-    let rt = tokio::runtime::Runtime::new()?;
+    let rt = tokio::runtime::Handle::current();
     let certs: Result<HashMap<CertName, VaultCert>, VaultError> = rt.block_on(async {
         let client = authenticate(
             &config.role_id_path,
@@ -257,7 +257,7 @@ struct Secret {
 }
 // This trait implementation used by the issuer to persist certificates
 pub fn persist(persist_spec: &VaultPersistSpec, cert: Certificate) -> Result<(), PersistError> {
-    let rt = tokio::runtime::Runtime::new()?;
+    let rt = tokio::runtime::Handle::current();
     let vault_write: Result<(), VaultError> = rt.block_on(async {
         let client = authenticate(
             &persist_spec.role_id_path,
@@ -379,7 +379,7 @@ impl CertSpecable for VaultSpec {
     fn touch(&self, config: &ConfigContainer) -> Result<(), TouchError> {
         let monitor_config = config.get_vault_monitor_config()?;
         let persist_spec = monitor_config.to_persist_spec(&self);
-        let rt = tokio::runtime::Runtime::new()?;
+        let rt = tokio::runtime::Handle::current();
         let write_meta_file: Result<(), VaultError> = rt.block_on(async {
             let client = authenticate(
                 &persist_spec.role_id_path,
@@ -409,7 +409,7 @@ impl CertSpecable for VaultSpec {
         match || -> Result<(), VaultError> {
             let monitor_config = config.get_vault_monitor_config()?;
             let persist_spec = monitor_config.to_persist_spec(&self);
-            let rt = tokio::runtime::Runtime::new()?;
+            let rt = tokio::runtime::Handle::current();
 
             let write_meta_file: Result<(), VaultError> = rt.block_on(async {
                 let client = authenticate(
