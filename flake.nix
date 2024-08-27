@@ -49,6 +49,7 @@
 
     devShell.${system} = with pkgs; mkShell {
       buildInputs = [
+        rust-analyzer
         cargo
         crate2nix
         openssl.dev
