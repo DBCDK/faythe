@@ -31,7 +31,6 @@
   in {
     packages.${system}.${pname} = pkgs.${pname};
     defaultPackage.${system} = pkgs.${pname};
-    checks.${system}.vault = pkgs.callPackage ./nixos/vault-test.nix {};
 
     overlays.default = final: prev: {
       "${pname}" = final.craneLib.buildPackage {
@@ -54,13 +53,16 @@
       };
     };
 
-    checks.${system}.sample-configs = pkgs.runCommandNoCC "check-sample-configs" { nativeBuildInputs = [ pkgs.${pname} ]; } ''
-      DIR=${./config-samples}
-      for FILE in $(ls -1 $DIR); do
-        echo "Testing: $DIR/$FILE"
-        faythe $DIR/$FILE --config-check >>$out
-      done
-    '';
+    checks.${system} = {
+      sample-configs = pkgs.runCommandNoCC "check-sample-configs" { nativeBuildInputs = [ pkgs.${pname} ]; } ''
+        DIR=${./config-samples}
+        for FILE in $(ls -1 $DIR); do
+          echo "Testing: $DIR/$FILE"
+          faythe $DIR/$FILE --config-check >>$out
+        done
+      '';
+      vault = pkgs.callPackage ./nixos/vault-test.nix {};
+    };
 
     devShell.${system} = with pkgs; mkShell {
       buildInputs = [
