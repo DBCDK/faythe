@@ -108,8 +108,11 @@ nixos-lib.runTest (
             lets_encrypt_email = "test_mail@${domain}";
             zones = {
               "${domain}" = {
-                server = ns_host;
-                key = "test";
+                auth_dns_server = ns_host;
+                challenge_driver.nsupdate ={
+                  server = ns_host;
+                  key = "test";
+                };
               };
             };
             val_dns_servers = [ ns_host ];
