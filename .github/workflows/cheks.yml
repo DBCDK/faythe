@@ -16,4 +16,4 @@ jobs:
         uses: DeterminateSystems/nix-installer-action@main
       - name: Setup Nix cache
         uses: DeterminateSystems/magic-nix-cache-action@main
-      - run: nix --experimental-features "nix-command flakes" flake check
+      - run: nix --experimental-features "nix-command flakes" flake check -L
