@@ -4,28 +4,28 @@ version = "0.1.0"
 edition = "2018"
 
 [dependencies]
+acme-lib = { git = 'https://github.com/DBCDK/acme-lib', branch = 'dbc-fork' }
+async-trait = { version = "0" }
+base64 = "0"
+chrono = "0"
 clap = { version = "=4.4", features = ["cargo"] } # We force 4.4 so we don't have to use rustc 1.74
+dbc-rust-modules = { git = "https://github.com/dbcdk/rust-modules", branch = "main" }
+env_logger = "0"
+lazy_static = "1"
+num-traits = "0"
+openssl = "0"
+prometheus_exporter_base = { version = "=1.4.0", features = ["hyper_server"] }
+regex = "1"
+reqwest = { version = "0", features = ["blocking", "json"] }
 serde = "1"
 serde_derive = "1"
 serde_json = "1"
-openssl = "0"
-base64 = "0"
-acme-lib = { git = 'https://github.com/DBCDK/acme-lib', branch = 'dbc-fork' }
-regex = "1"
-lazy_static = "1"
-walkdir = "2"
-trust-dns-resolver = "0"
-env_logger = "0"
-prometheus_exporter_base = { version = "=1.4.0", features = ["hyper_server"] }
 tokio = { version = "1", features = [ "full" ] }
-async-trait = { version = "0" }
-dbc-rust-modules = { git = "https://github.com/dbcdk/rust-modules", branch = "main" }
+trust-dns-resolver = "0"
+url = "2"
 vaultrs = "0"
 vaultrs-login = "0"
-url = "2"
-chrono = "0"
-num-traits = "0"
-reqwest = { version = "0", features = ["blocking", "json"] }
+walkdir = "2"
 
 [profile.release]
 panic = "abort"
