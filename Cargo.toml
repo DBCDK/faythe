@@ -5,26 +5,26 @@ edition = "2018"
 
 [dependencies]
 acme-lib = { git = 'https://github.com/DBCDK/acme-lib', branch = 'dbc-fork' }
-async-trait = { version = "0" }
-base64 = "0"
-chrono = "0"
+async-trait = { version = "0.1" }
+base64 = "0.22"
+chrono = "0.4"
 clap = { version = "=4.4", features = ["cargo"] } # We force 4.4 so we don't have to use rustc 1.74
 dbc-rust-modules = { git = "https://github.com/dbcdk/rust-modules", branch = "main" }
-env_logger = "0"
+env_logger = "0.11"
 lazy_static = "1"
-num-traits = "0"
-openssl = "0"
+num-traits = "0.2"
+openssl = "0.10"
 prometheus_exporter_base = { version = "=1.4.0", features = ["hyper_server"] }
 regex = "1"
-reqwest = { version = "0", features = ["blocking", "json"] }
+reqwest = { version = "0.12", features = ["blocking", "json"] }
 serde = "1"
 serde_derive = "1"
 serde_json = "1"
 tokio = { version = "1", features = [ "full" ] }
-trust-dns-resolver = "0"
+trust-dns-resolver = "0.23"
 url = "2"
-vaultrs = "0"
-vaultrs-login = "0"
+vaultrs = "0.7"
+vaultrs-login = "0.2"
 walkdir = "2"
 
 [profile.release]
