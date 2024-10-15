@@ -135,9 +135,10 @@ mod tests {
     use crate::mpsc;
     use crate::mpsc::{Receiver, Sender};
     use std::collections::HashSet;
+    use tokio::runtime::Runtime;
 
     fn create_channel() -> (Sender<CertSpec>, Receiver<CertSpec>) {
-        mpsc::channel()
+        mpsc::channel(100)
     }
 
     fn create_ingress(host: &String) -> Vec<Ingress> {
@@ -168,110 +169,111 @@ mod tests {
 
     #[test]
     fn test_normal_new_issue() {
+        let rt = Runtime::new().unwrap();
         let host = String::from("host1.subdivision.unit.test");
 
         let config = create_test_kubernetes_config(false);
-        let (tx, rx) = create_channel();
+        let (tx, mut rx) = create_channel();
         let ingresses = create_ingress(&host);
         let secrets: HashMap<String, kube::Secret> = HashMap::new();
-        let thread = thread::spawn(move || inspect(&config, &tx, &ingresses, secrets));
+        rt.block_on(inspect(&config, &tx, &ingresses, secrets));
 
-        let spec = rx.recv().unwrap();
+        let spec = rt.block_on(rx.recv()).unwrap();
         assert_eq!(spec.cn.to_domain_string(), host);
-        thread.join().unwrap();
     }
 
     #[test]
     fn test_wildcard_new_issue() {
+        let rt = Runtime::new().unwrap();
         let host = String::from("host1.subdivision.unit.test");
         let name = String::from("wild---card.subdivision.unit.test");
 
         let config = create_test_kubernetes_config(true);
-        let (tx, rx) = create_channel();
+        let (tx, mut rx) = create_channel();
         let ingresses = create_ingress(&host);
         let secrets: HashMap<String, kube::Secret> = HashMap::new();
-        let thread = thread::spawn(move || inspect(&config, &tx, &ingresses, secrets));
+        rt.block_on(inspect(&config, &tx, &ingresses, secrets));
 
-        let spec = rx.recv().unwrap();
+        let spec = rt.block_on(rx.recv()).unwrap();
         assert_eq!(spec.name, name);
         assert_eq!(
             spec.cn.to_domain_string(),
             String::from("*.subdivision.unit.test")
         );
-        thread.join().unwrap();
     }
 
     #[test]
     fn test_wildcard_host_in_ingress() {
+        let rt = Runtime::new().unwrap();
         let host = String::from("*.subdivision.unit.test");
 
         let config = create_test_kubernetes_config(false);
-        let (tx, rx) = create_channel();
+        let (tx, mut rx) = create_channel();
         let ingresses = create_ingress(&host);
         let secrets: HashMap<String, kube::Secret> = HashMap::new();
-        let thread = thread::spawn(move || inspect(&config, &tx, &ingresses, secrets));
-
+        rt.block_on(inspect(&config, &tx, &ingresses, secrets));
         assert!(rx.try_recv().is_err()); // it is not allowed to ask for a wildcard cert in k8s ingress specs
-        thread.join().unwrap();
     }
 
     #[test]
     fn test_non_authoritative_domain() {
+        let rt = Runtime::new().unwrap();
         let host = String::from("host1.subdivision.unit.wrongtest");
 
         let config = create_test_kubernetes_config(false);
-        let (tx, rx) = create_channel();
+        let (tx, mut rx) = create_channel();
         let ingresses = create_ingress(&host);
         let secrets: HashMap<String, kube::Secret> = HashMap::new();
-        let thread = thread::spawn(move || inspect(&config, &tx, &ingresses, secrets));
+        rt.block_on(inspect(&config, &tx, &ingresses, secrets));
 
-        assert!(rx.recv().is_err()); // faythe must know an authoritative ns server for the domain in question
-        thread.join().unwrap();
+        assert!(rx.try_recv().is_err()); // faythe must know an authoritative ns server for the domain in question
     }
 
     #[test]
     fn test_normal_renewal() {
+        let rt = Runtime::new().unwrap();
         let host = String::from("renewal1.subdivision.unit.test");
 
         let config = create_test_kubernetes_config(false);
-        let (tx, rx) = create_channel();
+        let (tx, mut rx) = create_channel();
         let ingresses = create_ingress(&host);
         let mut secrets: HashMap<String, kube::Secret> = HashMap::new();
         secrets.insert(host.clone(), create_secret(&host, 20));
 
-        let thread = thread::spawn(move || inspect(&config, &tx, &ingresses, secrets));
+        rt.block_on(inspect(&config, &tx, &ingresses, secrets));
 
-        let spec = rx.recv().unwrap();
+        let spec = rx.try_recv().unwrap();
         assert_eq!(spec.cn.to_domain_string(), host);
-        thread.join().unwrap();
     }
 
     #[test]
     fn test_not_yet_time_for_renewal() {
+        let rt = Runtime::new().unwrap();
         let host = String::from("renewal2.subdivision.unit.test");
         let name = host.clone();
 
         let config = create_test_kubernetes_config(false);
-        let (tx, rx) = create_channel();
+        let (tx, mut rx) = create_channel();
         let ingresses = create_ingress(&host);
         let mut secrets: HashMap<String, kube::Secret> = HashMap::new();
         secrets.insert(name, create_secret(&host, 40));
 
-        let thread = thread::spawn(move || inspect(&config, &tx, &ingresses, secrets));
+        rt.block_on(inspect(&config, &tx, &ingresses, secrets));
 
-        assert!(rx.recv().is_err()); // there should be nothing to issue
-        thread.join().unwrap();
+        assert!(rx.try_recv().is_err()); // there should be nothing to issue
     }
 
     #[test]
     fn test_wildcard_not_yet_time_for_renewal() {
         use std::convert::TryFrom;
 
+        let rt = Runtime::new().unwrap();
+
         let host = DNSName::try_from(&String::from("renewal2.subdivision.unit.test")).unwrap();
         let name = String::from("wild---card.subdivision.unit.test");
 
         let config = create_test_kubernetes_config(true);
-        let (tx, rx) = create_channel();
+        let (tx, mut rx) = create_channel();
         let ingresses = create_ingress(&host.to_domain_string());
         let mut secrets: HashMap<String, kube::Secret> = HashMap::new();
         secrets.insert(
@@ -279,9 +281,8 @@ mod tests {
             create_secret(&host.to_wildcard().unwrap().to_domain_string(), 40),
         );
 
-        let thread = thread::spawn(move || inspect(&config, &tx, &ingresses, secrets));
+        rt.block_on(inspect(&config, &tx, &ingresses, secrets));
 
-        assert!(rx.recv().is_err()); // there should be nothing to issue
-        thread.join().unwrap();
+        assert!(rx.try_recv().is_err()); // there should be nothing to issue
     }
 }
