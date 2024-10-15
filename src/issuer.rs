@@ -1,11 +1,11 @@
 
-use std::thread;
 use std::time::Duration;
 
 use crate::{dns, FaytheConfig, common};
 use crate::log;
 
-use std::sync::mpsc::{Receiver,TryRecvError};
+use tokio::sync::mpsc::Receiver;
+use tokio::sync::mpsc::error::TryRecvError;
 use std::collections::{VecDeque, HashSet, HashMap};
 
 use acme_lib::{ClientConfig, Directory, DirectoryUrl, create_rsa_key};
@@ -27,7 +27,7 @@ use crate::metrics::MetricsType;
 
 use chrono::Utc;
 
-pub fn process(faythe_config: FaytheConfig, rx: Receiver<CertSpec>) {
+pub async fn process(faythe_config: FaytheConfig, mut rx: Receiver<CertSpec>) {
 
     let mut queue: VecDeque<IssueOrder> = VecDeque::new();
     RESOLVERS.with(|r| r.write().unwrap().inner = init_resolvers(&faythe_config));
@@ -53,23 +53,23 @@ pub fn process(faythe_config: FaytheConfig, rx: Receiver<CertSpec>) {
             Err(_) => {}
         }
 
-        let queue_check = check_queue(&mut queue);
+        let queue_check = check_queue(&mut queue).await;
         if queue_check.is_err() {
             log::info("check queue err");
             log::info(&format!("{:?}", queue_check));
         }
-        thread::sleep(Duration::from_millis(5000));
+        tokio::time::sleep(Duration::from_secs(5)).await;
     }
 }
 
-fn check_queue(queue: &mut VecDeque<IssueOrder>) -> Result<(), IssuerError> {
+async fn check_queue(queue: &mut VecDeque<IssueOrder>) -> Result<(), IssuerError> {
     match queue.pop_front() {
         Some(mut order) => {
             match validate_challenge(&order) {
                 Ok(_) => {
                     order.inner.refresh()?;
                     if order.inner.is_validated() {
-                        let result = order.issue();
+                        let result = order.issue().await;
                         match result {
                             Ok(_) => metrics::new_event(&order.spec.name, MetricsType::Success),
                             Err(_) => metrics::new_event(&order.spec.name, MetricsType::Failure),
@@ -187,7 +187,7 @@ struct IssueOrder {
 }
 
 impl IssueOrder {
-    fn issue(&self) -> Result<(), IssuerError> {
+    async fn issue(&self) -> Result<(), IssuerError> {
         log::data("Issuing", &self.spec);
 
         let pkey_pri = create_rsa_key(2048);
@@ -200,7 +200,7 @@ impl IssueOrder {
             ord_csr.finalize_pkey(pkey_pri, 5000)?;
         let cert = ord_cert.download_and_save_cert()?;
 
-        Ok(self.spec.persist(cert)?)
+        Ok(self.spec.persist(cert).await?)
     }
 }
 
