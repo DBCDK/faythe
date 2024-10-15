@@ -156,7 +156,7 @@ impl CertSpec {
 }
 
 pub trait Persistable {
-    fn persist(&self, cert: Certificate) -> Result<(), PersistError>;
+    async fn persist(&self, cert: Certificate) -> Result<(), PersistError>;
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -183,11 +183,11 @@ pub enum PersistSpec {
 }
 
 impl Persistable for CertSpec {
-    fn persist(&self, cert: Certificate) -> Result<(), PersistError> {
+    async fn persist(&self, cert: Certificate) -> Result<(), PersistError> {
         match &self.persist_spec {
             PersistSpec::KUBERNETES(spec) => Ok(kube::persist(&spec, &cert)?),
             PersistSpec::FILE(spec) => Ok(file::persist(&spec, &cert)?),
-            PersistSpec::VAULT(spec) => Ok(vault::persist(&spec, cert)?),
+            PersistSpec::VAULT(spec) => Ok(vault::persist(&spec, cert).await?),
             //PersistSpec::FILE(_spec) => { unimplemented!() },
             PersistSpec::DONTPERSIST => { Ok(()) }
         }
@@ -325,8 +325,8 @@ pub trait ValidityVerifier {
 
 pub trait CertSpecable: IssueSource {
     fn to_cert_spec(&self, config: &ConfigContainer) -> Result<CertSpec, SpecError>;
-    fn touch(&self, config: &ConfigContainer) -> Result<(), TouchError>;
-    fn should_retry(&self, config: &ConfigContainer) -> bool;
+    async fn touch(&self, config: &ConfigContainer) -> Result<(), TouchError>;
+    async fn should_retry(&self, config: &ConfigContainer) -> bool;
 }
 
 pub trait IssueSource {

@@ -12,7 +12,8 @@ use acme_lib::Certificate;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::path::Path;
-use std::sync::{Arc, Mutex};
+use std::sync::Arc;
+use tokio::sync::Mutex;
 use url::Url;
 use vaultrs::client::VaultClientSettingsBuilder;
 use vaultrs::error::ClientError;
@@ -59,7 +60,6 @@ fn default_private_key_suffix() -> String {
 pub enum VaultError {
     Client(ClientError),
     IO(std::io::Error),
-    LockPoison,
     SpecError(crate::common::SpecError),
     TimeStampParseError(chrono::ParseError),
     UTF8(std::str::Utf8Error),
@@ -101,51 +101,46 @@ impl std::convert::From<ClientError> for VaultError {
 }
 
 // Returns a hashmap that associates a certificate with it's path name in vault
-pub fn list(config: &VaultMonitorConfig) -> Result<HashMap<CertName, VaultCert>, VaultError> {
-    let rt = tokio::runtime::Runtime::new()?;
-    let certs: Result<HashMap<CertName, VaultCert>, VaultError> = rt.block_on(async {
-        let client = authenticate(
-            &config.role_id_path,
-            &config.secret_id_path,
-            &config.vault_addr,
-        )
-        .await?;
+pub async fn list(config: &VaultMonitorConfig) -> Result<HashMap<CertName, VaultCert>, VaultError> {
+    let client = authenticate(
+        &config.role_id_path,
+        &config.secret_id_path,
+        &config.vault_addr,
+    )
+    .await?;
 
-        let mut certs: HashMap<CertName, VaultCert> = HashMap::new();
-        for s in &config.specs {
-            let vault_paths = default_key_names(&config, s);
-            let cert_raw: Result<VaultData, _> =
-                kv2::read(&*client, &config.kv_mount, &vault_paths.cert).await;
+    let mut certs: HashMap<CertName, VaultCert> = HashMap::new();
+    for s in &config.specs {
+        let vault_paths = default_key_names(&config, s);
+        let cert_raw: Result<VaultData, _> =
+            kv2::read(&*client, &config.kv_mount, &vault_paths.cert).await;
 
-            match cert_raw {
-                Ok(raw) => match Cert::parse(&raw.value.as_bytes().to_vec()) {
-                    Ok(cert) => {
-                        certs.insert(s.name.to_string(), VaultCert { cert });
-                    }
-                    Err(err) => log::error(
-                        &format!(
-                            "LIST: failed parse raw cert data for path: {}",
-                            &vault_paths.cert
-                        ),
-                        &err,
-                    ),
-                },
-                // If faythe does not find a certificate, a new one will be issued.
-                // So don't propagate this 404.
-                Err(_err @ ClientError::APIError { code: 404, .. }) => {}
+        match cert_raw {
+            Ok(raw) => match Cert::parse(&raw.value.as_bytes().to_vec()) {
+                Ok(cert) => {
+                    certs.insert(s.name.to_string(), VaultCert { cert });
+                }
                 Err(err) => log::error(
                     &format!(
-                        "LIST: failed to vault-kv-get raw cert data for path: {}",
+                        "LIST: failed parse raw cert data for path: {}",
                         &vault_paths.cert
                     ),
                     &err,
                 ),
-            }
+            },
+            // If faythe does not find a certificate, a new one will be issued.
+            // So don't propagate this 404.
+            Err(_err @ ClientError::APIError { code: 404, .. }) => {}
+            Err(err) => log::error(
+                &format!(
+                    "LIST: failed to vault-kv-get raw cert data for path: {}",
+                    &vault_paths.cert
+                ),
+                &err,
+            ),
         }
-        Ok(certs)
-    });
-
-    Ok(certs?)
+    }
+    Ok(certs)
 }
 
 fn read_to_string(path: &Path) -> Result<String, std::io::Error> {
@@ -197,7 +192,7 @@ pub async fn authenticate(
     secret_id_path: &Path,
     vault_addr: &Url,
 ) -> Result<Arc<VaultClient>, VaultError> {
-    let mut existing_client = CLIENT.lock().map_err(|_| VaultError::LockPoison)?;
+    let mut existing_client = CLIENT.lock().await;
     let client_health = match &*existing_client {
         Some(client) => {
             // Derefence and take lock from client
@@ -256,34 +251,32 @@ struct Secret {
     value: String,
 }
 // This trait implementation used by the issuer to persist certificates
-pub fn persist(persist_spec: &VaultPersistSpec, cert: Certificate) -> Result<(), PersistError> {
-    let rt = tokio::runtime::Runtime::new()?;
-    let vault_write: Result<(), VaultError> = rt.block_on(async {
-        let client = authenticate(
-            &persist_spec.role_id_path,
-            &persist_spec.secret_id_path,
-            &persist_spec.vault_addr,
-        )
-        .await?;
+pub async fn persist(persist_spec: &VaultPersistSpec, cert: Certificate) -> Result<(), PersistError> {
+    let client = authenticate(
+        &persist_spec.role_id_path,
+        &persist_spec.secret_id_path,
+        &persist_spec.vault_addr,
+    )
+    .await?;
 
-        kv2::set(
-            &*client,
-            &persist_spec.kv_mount,
-            &persist_spec.paths.cert,
-            &kv_data(std::str::from_utf8(&cert.certificate().as_bytes())?.to_string()),
-        )
-        .await?;
+    kv2::set(
+        &*client,
+        &persist_spec.kv_mount,
+        &persist_spec.paths.cert,
+        &kv_data(std::str::from_utf8(&cert.certificate().as_bytes())
+        .map_err(|e| PersistError::Vault(e.into()))?.to_string()),
+    )
+    .await.map_err(|e| PersistError::Vault(e.into()))?;
 
-        kv2::set(
-            &*client,
-            &persist_spec.kv_mount,
-            &persist_spec.paths.key,
-            &kv_data(std::str::from_utf8(&cert.private_key().as_bytes())?.to_string()),
-        )
-        .await?;
-        Ok(())
-    });
-    Ok(vault_write?)
+    kv2::set(
+        &*client,
+        &persist_spec.kv_mount,
+        &persist_spec.paths.key,
+        &kv_data(std::str::from_utf8(&cert.private_key().as_bytes())
+        .map_err(|e| PersistError::Vault(e.into()))?.to_string()),
+    )
+    .await.map_err(|e| PersistError::Vault(e.into()))?;
+    Ok(())
 }
 
 impl IssueSource for VaultSpec {
@@ -364,6 +357,39 @@ impl VaultData {
     }
 }
 
+impl VaultSpec {
+    async fn write_meta_file(&self, config: &ConfigContainer) -> Result<(), VaultError> {
+        let monitor_config = config.get_vault_monitor_config()?;
+        let persist_spec = monitor_config.to_persist_spec(&self);
+
+        let client = authenticate(
+            &persist_spec.role_id_path,
+            &persist_spec.secret_id_path,
+            &persist_spec.vault_addr,
+        )
+        .await?;
+
+        let raw_read: Result<VaultData, ClientError> =
+            kv2::read(&*client, &persist_spec.kv_mount, &persist_spec.paths.meta).await;
+
+        match raw_read {
+            Ok(value) => {
+                let time_stamp = chrono::DateTime::parse_from_rfc3339(&value.borrow())?;
+                let diff = chrono::Utc::now().signed_duration_since(time_stamp);
+                match diff
+                    > chrono::Duration::milliseconds(
+                        config.faythe_config.issue_grace as i64,
+                    ) {
+                    true => Ok(()),
+                    false => Err(VaultError::RecentlyTouched),
+                }
+            }
+            Err(_err @ ClientError::APIError { code: 404, .. }) => Ok(()), // if the key doesn't exist, just create it
+            Err(err) => Err(err.into()), // unexpected Vault-error
+        }
+    }
+}
+
 impl CertSpecable for VaultSpec {
     fn to_cert_spec(&self, config: &ConfigContainer) -> Result<CertSpec, SpecError> {
         let cn = self.get_computed_cn(&config.faythe_config)?;
@@ -376,70 +402,40 @@ impl CertSpecable for VaultSpec {
         })
     }
     // Write meta file, meta file just contains a rfc3339 timestamp
-    fn touch(&self, config: &ConfigContainer) -> Result<(), TouchError> {
+    async fn touch(&self, config: &ConfigContainer) -> Result<(), TouchError> {
         let monitor_config = config.get_vault_monitor_config()?;
         let persist_spec = monitor_config.to_persist_spec(&self);
-        let rt = tokio::runtime::Runtime::new()?;
-        let write_meta_file: Result<(), VaultError> = rt.block_on(async {
-            let client = authenticate(
-                &persist_spec.role_id_path,
-                &persist_spec.secret_id_path,
-                &persist_spec.vault_addr,
-            )
-            .await?;
 
-            kv2::set(
-                &*client,
-                &persist_spec.kv_mount,
-                &persist_spec.paths.meta,
-                &kv_data(chrono::Utc::now().to_rfc3339()),
-            )
-            .await?;
+        let client = authenticate(
+            &persist_spec.role_id_path,
+            &persist_spec.secret_id_path,
+            &persist_spec.vault_addr,
+        )
+        .await.map_err(|e| {
+            log::error("vault/touch: auth failure", &e);
+            TouchError::Failed
+        })?;
 
-            Ok(())
-        });
-        write_meta_file.map_err(|e| {
+        kv2::set(
+            &*client,
+            &persist_spec.kv_mount,
+            &persist_spec.paths.meta,
+            &kv_data(chrono::Utc::now().to_rfc3339()),
+        )
+        .await.map_err(|e| {
+            log::error("vault/touch: kv2::set failure", &e);
+            TouchError::Failed
+        })?;
+
+        self.write_meta_file(config).await.map_err(|e| {
             log::error("failed to write meta file", &e);
             TouchError::Failed
         })
     }
     // Check if meta file is too old, and a new certicate
     // must be issued.
-    fn should_retry(&self, config: &ConfigContainer) -> bool {
-        match || -> Result<(), VaultError> {
-            let monitor_config = config.get_vault_monitor_config()?;
-            let persist_spec = monitor_config.to_persist_spec(&self);
-            let rt = tokio::runtime::Runtime::new()?;
-
-            let write_meta_file: Result<(), VaultError> = rt.block_on(async {
-                let client = authenticate(
-                    &persist_spec.role_id_path,
-                    &persist_spec.secret_id_path,
-                    &persist_spec.vault_addr,
-                )
-                .await?;
-
-                let raw_read: Result<VaultData, ClientError> =
-                    kv2::read(&*client, &persist_spec.kv_mount, &persist_spec.paths.meta).await;
-
-                match raw_read {
-                    Ok(value) => {
-                        let time_stamp = chrono::DateTime::parse_from_rfc3339(&value.borrow())?;
-                        let diff = chrono::Utc::now().signed_duration_since(time_stamp);
-                        match diff
-                            > chrono::Duration::milliseconds(
-                                config.faythe_config.issue_grace as i64,
-                            ) {
-                            true => Ok(()),
-                            false => Err(VaultError::RecentlyTouched),
-                        }
-                    }
-                    Err(_err @ ClientError::APIError { code: 404, .. }) => Ok(()), // if the key doesn't exist, just create it
-                    Err(err) => Err(err.into()), // unexpected Vault-error
-                }
-            });
-            Ok(write_meta_file?)
-        }() {
+    async fn should_retry(&self, config: &ConfigContainer) -> bool {
+        match self.write_meta_file(config).await {
             Ok(()) => true,
             Err(VaultError::RecentlyTouched) => false, // who cares, don't log this
             Err(err) => {
