@@ -215,6 +215,7 @@ nixos-lib.runTest (
               dnsutils
               dig
             ];
+            environment.RUST_BACKTRACE = "full";
             wantedBy = [ "multi-user.target" ];
             wants = [ "vault-provision.service" ];
             after = [ "vault-provision.service" ];
