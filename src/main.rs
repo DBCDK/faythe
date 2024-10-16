@@ -114,6 +114,6 @@ async fn run(config: &FaytheConfig) {
     }
 
     let metrics_port = config.metrics_port;
-    metrics::serve(metrics_port);
+    threads.spawn(metrics::serve(metrics_port));
     threads.join_all().await;
 }

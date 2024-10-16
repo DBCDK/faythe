@@ -37,7 +37,6 @@ pub fn new_event(cert_name: &str, event_type: MetricsType) {
     guard.insert(event, new_value);
 }
 
-#[tokio::main]
 pub async fn serve(port: u16) {
     let addr = ServerOptions {
         addr:   ([0, 0, 0, 0], port).into(),
