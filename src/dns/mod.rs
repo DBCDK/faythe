@@ -8,7 +8,7 @@ use std::convert::From;
 use crate::log;
 use crate::common::{CertSpec, DNSName, SpecError};
 use crate::config::Zone;
-use self::trust_dns_resolver::Resolver;
+use self::trust_dns_resolver::TokioAsyncResolver;
 use self::trust_dns_resolver::error::{ResolveError,ResolveErrorKind};
 use std::string::String;
 
@@ -77,9 +77,9 @@ pub fn delete(config: &FaytheConfig, spec: &CertSpec) -> Result<(), DNSError> {
     Ok(())
 }
 
-pub fn query(resolver: &Resolver, host: &DNSName, proof: &String) -> Result<(), DNSError> {
+pub async fn query(resolver: &TokioAsyncResolver, host: &DNSName, proof: &String) -> Result<(), DNSError> {
     let challenge_host = challenge_host(host, None);
-    match resolver.txt_lookup(&challenge_host) {
+    match resolver.txt_lookup(&challenge_host).await {
         Ok(res) => {
             let trim_chars: &[_] = &['"', '\n'];
             res.iter().find(|record_set|

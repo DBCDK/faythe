@@ -17,8 +17,11 @@ use std::prelude::v1::Vec;
 
 use serde_json::json;
 use std::convert::TryFrom;
-use trust_dns_resolver::Resolver;
-use std::sync::RwLock;
+use trust_dns_resolver::{AsyncResolver, TokioAsyncResolver};
+use trust_dns_resolver::config::{ResolverConfig, NameServerConfigGroup, ResolverOpts};
+use trust_dns_resolver::error::ResolveErrorKind;
+use std::net::IpAddr;
+use tokio::sync::RwLock;
 use std::fmt::Debug;
 use crate::dns::DNSError;
 
@@ -30,7 +33,8 @@ use chrono::Utc;
 pub async fn process(faythe_config: FaytheConfig, mut rx: Receiver<CertSpec>) {
 
     let mut queue: VecDeque<IssueOrder> = VecDeque::new();
-    RESOLVERS.with(|r| r.write().unwrap().inner = init_resolvers(&faythe_config));
+    let resolvers = init_resolvers(&faythe_config).await.unwrap();
+    RESOLVERS.write().await.inner = resolvers;
 
     log::info("processing-started");
     loop {
@@ -65,7 +69,7 @@ pub async fn process(faythe_config: FaytheConfig, mut rx: Receiver<CertSpec>) {
 async fn check_queue(queue: &mut VecDeque<IssueOrder>) -> Result<(), IssuerError> {
     match queue.pop_front() {
         Some(mut order) => {
-            match validate_challenge(&order) {
+            match validate_challenge(&order).await {
                 Ok(_) => {
                     order.inner.refresh()?;
                     if order.inner.is_validated() {
@@ -103,28 +107,28 @@ async fn check_queue(queue: &mut VecDeque<IssueOrder>) -> Result<(), IssuerError
     }
 }
 
-fn validate_challenge(order: &IssueOrder) -> Result<(), IssuerError> {
-
+async fn validate_challenge(order: &IssueOrder) -> Result<(), IssuerError> {
     for a in &order.authorizations {
         let domain = DNSName::try_from(&String::from(a.domain_name()))?;
         let challenge = a.dns_challenge();
         let proof = challenge.dns_proof();
         let log_data = json!({ "domain": &domain, "proof": &proof });
 
-        RESOLVERS.with(|r| -> Result<(), DNSError> {
+        {
+            let resolvers = RESOLVERS.read().await;
+
             // TODO: Proper retry logic
             log::info("Validating internally after 20s");
 
             log::data("Validating auth_dns_servers internally", &log_data);
             for d in &order.auth_dns_servers {
-                dns::query(r.read().unwrap().get(&d).unwrap(), &domain, &proof)?;
+                dns::query(resolvers.get(&d).unwrap(), &domain, &proof).await?;
             }
             log::data("Validating val_dns_servers internally", &log_data);
             for d in &order.val_dns_servers {
-                dns::query(r.read().unwrap().get(&d).unwrap(), &domain, &proof)?;
+                dns::query(resolvers.get(&d).unwrap(), &domain, &proof).await?;
             }
-            Ok(())
-        })?;
+        }
         log::data("Asking LE to validate", &log_data);
         challenge.validate(5000)?;
     }
@@ -250,66 +254,61 @@ impl std::convert::From<std::io::Error> for ResolverError<'_> {
     }
 }
 
-thread_local! {
-    static RESOLVERS: RwLock<Resolvers> = RwLock::new(Resolvers{
+lazy_static! {
+    static ref RESOLVERS: RwLock<Resolvers> = RwLock::new(Resolvers{
         inner: HashMap::with_capacity(0)
     });
 }
 
 struct Resolvers {
-    inner: HashMap<String, Resolver>
+    inner: HashMap<String, TokioAsyncResolver>
 }
 
 impl Resolvers {
-    fn get(&self, server: &String) -> Option<&Resolver> {
+    fn get(&self, server: &String) -> Option<&TokioAsyncResolver> {
         self.inner.get(server)
     }
 }
 
-fn init_resolvers<'l>(config: &FaytheConfig) -> HashMap<String, Resolver> {
-    use trust_dns_resolver::config::{ResolverConfig, NameServerConfigGroup, ResolverOpts};
-    use trust_dns_resolver::error::ResolveErrorKind;
-    use std::net::IpAddr;
-
+async fn init_resolvers<'l>(config: &FaytheConfig) -> Result<HashMap<String, TokioAsyncResolver>, ResolverError> {
     let mut resolvers = HashMap::new();
 
-    let create_resolvers = |server: &String, resolvers: &mut HashMap<String, Resolver>| {
+    for z in &config.zones {
+        let server = &z.1.auth_dns_server;
+        resolvers.insert(server.clone(), create_resolvers(&server).await?);
+    }
+    for s in &config.val_dns_servers {
+        resolvers.insert(s.to_string(), create_resolvers(&s).await?);
+    }
+    Ok(resolvers)
+}
 
-        match || -> Result<(), ResolverError> {
-            let system_resolver = Resolver::from_system_conf().or(Err(ResolverError::SystemResolveConf))?;
+async fn create_resolvers<'a>(server: &'a String) -> Result<TokioAsyncResolver, ResolverError<'a>> {
 
-            //try-parse what's in the config file as an ip-address, if that fails, assume it's a hostname that can be looked up
-            let ip: IpAddr = match server.parse() {
-                Ok(ip) => Ok(ip),
-                Err(_) => {
-                    match system_resolver.lookup_ip(server) {
-                        Ok(res) => res.iter().next().ok_or(ResolverError::NoIpsForResolversFound(server)), // grabbing the first A record only for now
-                        Err(err) => {
-                            Err(match err.kind() {
-                                ResolveErrorKind::NoRecordsFound { .. } => ResolverError::NoIpsForResolversFound(server),
-                                _ => ResolverError::Other
-                            })
-                        }
-                    }
+    let system_resolver = AsyncResolver::tokio_from_system_conf().or(Err(ResolverError::SystemResolveConf))?;
+
+    //try-parse what's in the config file as an ip-address, if that fails, assume it's a hostname that can be looked up
+    let ip: IpAddr = match server.parse() {
+        Ok(ip) => Ok(ip),
+        Err(_) => {
+            match system_resolver.lookup_ip(server).await {
+                Ok(res) => res.iter().next().ok_or(ResolverError::NoIpsForResolversFound(server)), // grabbing the first A record only for now
+                Err(err) => {
+                    Err(match err.kind() {
+                        ResolveErrorKind::NoRecordsFound { .. } => ResolverError::NoIpsForResolversFound(server),
+                        _ => ResolverError::Other
+                    })
                 }
-            }?;
-
-            let mut conf = ResolverConfig::new();
-            for c in &*NameServerConfigGroup::from_ips_clear(&[ip.to_owned()], 53, true) {
-                conf.add_name_server(c.to_owned());
             }
-            let mut opts = ResolverOpts::default();
-            // Never believe NXDOMAIN for more than 1 minute
-            opts.negative_max_ttl = Some(Duration::new(60,0));
-            resolvers.insert(server.to_owned(), Resolver::new(conf, opts).unwrap());
-            Ok(())
-        }() {
-            Err(e) => { log::error(format!("failed to init resolver for server: {}", &server).as_str(), &e); }
-            _ => {}
-        };
-    };
+        }
+    }?;
 
-    config.zones.iter().for_each(|(_, z)| create_resolvers(&z.auth_dns_server, &mut resolvers));
-    config.val_dns_servers.iter().for_each(|s| create_resolvers(&s, &mut resolvers));
-    resolvers
+    let mut conf = ResolverConfig::new();
+    for c in &*NameServerConfigGroup::from_ips_clear(&[ip.to_owned()], 53, true) {
+        conf.add_name_server(c.to_owned());
+    }
+    let mut opts = ResolverOpts::default();
+    // Never believe NXDOMAIN for more than 1 minute
+    opts.negative_max_ttl = Some(Duration::new(60,0));
+    Ok(AsyncResolver::tokio(conf, opts))
 }
