@@ -229,6 +229,8 @@ pub async fn login(
     let role_id = role_id.trim();
     let secret_id = secret_id.trim();
 
+    log::info("new client");
+
     let mut client = VaultClient::new(
         VaultClientSettingsBuilder::default()
             .address(vault_addr.as_str())
@@ -241,6 +243,8 @@ pub async fn login(
         role_id: role_id.to_string(),
         secret_id: secret_id.to_string(),
     };
+
+    log::info("logging into vault with approle credentials...");
 
     client.login("approle", &applogin).await?;
     Ok(client)
