@@ -12,7 +12,6 @@ use acme_lib::Certificate;
 use std::collections::HashMap;
 use std::collections::HashSet;
 use std::path::Path;
-use std::sync::Arc;
 use tokio::sync::Mutex;
 use url::Url;
 use vaultrs::client::VaultClientSettingsBuilder;
@@ -102,7 +101,7 @@ impl std::convert::From<ClientError> for VaultError {
 
 // Returns a hashmap that associates a certificate with it's path name in vault
 pub async fn list(config: &VaultMonitorConfig) -> Result<HashMap<CertName, VaultCert>, VaultError> {
-    let client = authenticate(
+    let _ = authenticate(
         &config.role_id_path,
         &config.secret_id_path,
         &config.vault_addr,
@@ -112,8 +111,11 @@ pub async fn list(config: &VaultMonitorConfig) -> Result<HashMap<CertName, Vault
     let mut certs: HashMap<CertName, VaultCert> = HashMap::new();
     for s in &config.specs {
         let vault_paths = default_key_names(&config, s);
-        let cert_raw: Result<VaultData, _> =
-            kv2::read(&*client, &config.kv_mount, &vault_paths.cert).await;
+
+        let cert_raw: Result<VaultData, _> = {
+            kv2::read(CLIENT.lock().await.as_ref().unwrap(), &config.kv_mount, &vault_paths.cert).await
+        };
+
 
         match cert_raw {
             Ok(raw) => match Cert::parse(&raw.value.as_bytes().to_vec()) {
@@ -151,8 +153,12 @@ fn read_to_string(path: &Path) -> Result<String, std::io::Error> {
 }
 
 lazy_static! {
-    static ref CLIENT: Mutex<Option<Arc<VaultClient>>> = Mutex::new(None);
+    static ref CLIENT: Mutex<Option<VaultClient>> = Mutex::new(None);
 }
+
+// async fn with_client<R: std::future::Future>(f: impl Fn(&VaultClient) -> R) -> R {
+//     f(CLIENT.lock().await.as_mut().unwrap()).await
+// }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct VaultKVSettings {
@@ -175,12 +181,15 @@ impl std::convert::From<&KeyNames> for VaultKVSettings {
     }
 }
 
-#[inline(always)]
-async fn renew_client(client: &VaultClient) -> Result<(), ClientError> {
-    let token_resp = vaultrs::client::Client::lookup(client).await?;
+async fn renew_client() -> Result<(), ClientError> {
+    log::info("renew_client");
+    let token_resp = vaultrs::client::Client::lookup(CLIENT.lock().await.as_ref().unwrap()).await?;
+    println!("token_Resp: {:?}", token_resp);
+
     if token_resp.ttl < (token_resp.creation_ttl / 2) {
         // empty string means increment token endpoint by default ttl value
-        let _auth_info = vaultrs::client::Client::renew(client, Some("")).await?;
+        let auth_info = vaultrs::client::Client::renew(CLIENT.lock().await.as_ref().unwrap(), Some("")).await?;
+        println!("auth_info: {:?}", auth_info);
         log::info("Client endpoint extended. Lease duration extended by default token ttl value.");
     }
     Ok(())
@@ -191,13 +200,13 @@ pub async fn authenticate(
     role_id_path: &Path,
     secret_id_path: &Path,
     vault_addr: &Url,
-) -> Result<Arc<VaultClient>, VaultError> {
+) -> Result<(), VaultError> {
+    log::info("authenticate");
     let mut existing_client = CLIENT.lock().await;
     let client_health = match &*existing_client {
         Some(client) => {
             // Derefence and take lock from client
-            let client = &**client;
-            let renewed_client = renew_client(client).await;
+            let renewed_client = renew_client().await;
 
             match renewed_client {
                 Ok(_) => true,
@@ -209,12 +218,10 @@ pub async fn authenticate(
     };
 
     Ok(if client_health {
-        (*existing_client).as_ref().unwrap().clone()
     } else {
         log::info("vault client unhealthy or uninitialized, trying to authenticate...");
-        let new_client = Arc::new(login(role_id_path, secret_id_path, vault_addr).await?);
-        *existing_client = Some(new_client.clone());
-        new_client
+        let new_client = login(role_id_path, secret_id_path, vault_addr).await?;
+        *existing_client = Some(new_client);
     })
 }
 
@@ -256,7 +263,7 @@ struct Secret {
 }
 // This trait implementation used by the issuer to persist certificates
 pub async fn persist(persist_spec: &VaultPersistSpec, cert: Certificate) -> Result<(), PersistError> {
-    let client = authenticate(
+    let _ = authenticate(
         &persist_spec.role_id_path,
         &persist_spec.secret_id_path,
         &persist_spec.vault_addr,
@@ -264,7 +271,7 @@ pub async fn persist(persist_spec: &VaultPersistSpec, cert: Certificate) -> Resu
     .await?;
 
     kv2::set(
-        &*client,
+        CLIENT.lock().await.as_ref().unwrap(),
         &persist_spec.kv_mount,
         &persist_spec.paths.cert,
         &kv_data(std::str::from_utf8(&cert.certificate().as_bytes())
@@ -273,7 +280,7 @@ pub async fn persist(persist_spec: &VaultPersistSpec, cert: Certificate) -> Resu
     .await.map_err(|e| PersistError::Vault(e.into()))?;
 
     kv2::set(
-        &*client,
+       CLIENT.lock().await.as_ref().unwrap(),
         &persist_spec.kv_mount,
         &persist_spec.paths.key,
         &kv_data(std::str::from_utf8(&cert.private_key().as_bytes())
@@ -366,15 +373,16 @@ impl VaultSpec {
         let monitor_config = config.get_vault_monitor_config()?;
         let persist_spec = monitor_config.to_persist_spec(&self);
 
-        let client = authenticate(
+        let _ = authenticate(
             &persist_spec.role_id_path,
             &persist_spec.secret_id_path,
             &persist_spec.vault_addr,
         )
         .await?;
 
-        let raw_read: Result<VaultData, ClientError> =
-            kv2::read(&*client, &persist_spec.kv_mount, &persist_spec.paths.meta).await;
+        let raw_read: Result<VaultData, ClientError> = {
+            kv2::read(CLIENT.lock().await.as_ref().unwrap(), &persist_spec.kv_mount, &persist_spec.paths.meta).await
+        };
 
         match raw_read {
             Ok(value) => {
@@ -410,7 +418,7 @@ impl CertSpecable for VaultSpec {
         let monitor_config = config.get_vault_monitor_config()?;
         let persist_spec = monitor_config.to_persist_spec(&self);
 
-        let client = authenticate(
+        let _ = authenticate(
             &persist_spec.role_id_path,
             &persist_spec.secret_id_path,
             &persist_spec.vault_addr,
@@ -421,7 +429,8 @@ impl CertSpecable for VaultSpec {
         })?;
 
         kv2::set(
-            &*client,
+            // &*client,
+            CLIENT.lock().await.as_ref().unwrap(),
             &persist_spec.kv_mount,
             &persist_spec.paths.meta,
             &kv_data(chrono::Utc::now().to_rfc3339()),
