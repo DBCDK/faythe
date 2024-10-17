@@ -107,10 +107,10 @@ async fn inspect<CS, VV>(
                         log::data("touched", &spec.name); //TODO: improve logging
                         if should_issue {
                             log::data("(re-)issuing", &spec.name); //TODO: improve logging
-                            let _ = tx.send(spec.to_owned()).await.map_err(|e| {
+                            tx.send(spec.to_owned()).await.map_err(|e| {
                                 log::error("failed to send certspec to issue channel", &e);
                                 metrics::new_event(&spec.name, MetricsType::Failure);
-                            });
+                            }).unwrap();
                         }
                     }
                     Err(e) => {
