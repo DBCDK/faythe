@@ -362,51 +362,7 @@ impl VaultData {
 }
 
 impl VaultSpec {
-    async fn write_meta_file(&self, config: &ConfigContainer) -> Result<(), VaultError> {
-        let monitor_config = config.get_vault_monitor_config()?;
-        let persist_spec = monitor_config.to_persist_spec(&self);
-
-        let client = authenticate(
-            &persist_spec.role_id_path,
-            &persist_spec.secret_id_path,
-            &persist_spec.vault_addr,
-        )
-        .await?;
-
-        let raw_read: Result<VaultData, ClientError> =
-            kv2::read(&*client, &persist_spec.kv_mount, &persist_spec.paths.meta).await;
-
-        match raw_read {
-            Ok(value) => {
-                let time_stamp = chrono::DateTime::parse_from_rfc3339(&value.borrow())?;
-                let diff = chrono::Utc::now().signed_duration_since(time_stamp);
-                match diff
-                    > chrono::Duration::milliseconds(
-                        config.faythe_config.issue_grace as i64,
-                    ) {
-                    true => Ok(()),
-                    false => Err(VaultError::RecentlyTouched),
-                }
-            }
-            Err(_err @ ClientError::APIError { code: 404, .. }) => Ok(()), // if the key doesn't exist, just create it
-            Err(err) => Err(err.into()), // unexpected Vault-error
-        }
-    }
-}
-
-impl CertSpecable for VaultSpec {
-    fn to_cert_spec(&self, config: &ConfigContainer) -> Result<CertSpec, SpecError> {
-        let cn = self.get_computed_cn(&config.faythe_config)?;
-        let monitor_config = config.get_vault_monitor_config()?;
-        Ok(CertSpec {
-            name: self.name.clone(),
-            cn,
-            sans: self.get_computed_sans(&config.faythe_config)?,
-            persist_spec: PersistSpec::VAULT(monitor_config.to_persist_spec(&self)),
-        })
-    }
-    // Write meta file, meta file just contains a rfc3339 timestamp
-    async fn touch(&self, config: &ConfigContainer) -> Result<(), TouchError> {
+    async fn write_meta_file(&self, config: &ConfigContainer) -> Result<(), TouchError> {
         let monitor_config = config.get_vault_monitor_config()?;
         let persist_spec = monitor_config.to_persist_spec(&self);
 
@@ -426,10 +382,30 @@ impl CertSpecable for VaultSpec {
             &persist_spec.paths.meta,
             &kv_data(chrono::Utc::now().to_rfc3339()),
         )
-        .await.map_err(|e| {
+        .await
+        .map_err(|e| {
             log::error("vault/touch: kv2::set failure", &e);
             TouchError::Failed
-        })?;
+        })
+        .map(|_| ())
+    }
+}
+
+impl CertSpecable for VaultSpec {
+    fn to_cert_spec(&self, config: &ConfigContainer) -> Result<CertSpec, SpecError> {
+        let cn = self.get_computed_cn(&config.faythe_config)?;
+        let monitor_config = config.get_vault_monitor_config()?;
+        Ok(CertSpec {
+            name: self.name.clone(),
+            cn,
+            sans: self.get_computed_sans(&config.faythe_config)?,
+            persist_spec: PersistSpec::VAULT(monitor_config.to_persist_spec(&self)),
+        })
+    }
+    // Write meta file, meta file just contains a rfc3339 timestamp
+    async fn touch(&self, config: &ConfigContainer) -> Result<(), TouchError> {
+        let monitor_config = config.get_vault_monitor_config()?;
+        let persist_spec = monitor_config.to_persist_spec(&self);
 
         self.write_meta_file(config).await.map_err(|e| {
             log::error("failed to write meta file", &e);
@@ -441,7 +417,7 @@ impl CertSpecable for VaultSpec {
     async fn should_retry(&self, config: &ConfigContainer) -> bool {
         match self.write_meta_file(config).await {
             Ok(()) => true,
-            Err(VaultError::RecentlyTouched) => false, // who cares, don't log this
+            Err(TouchError::RecentlyTouched) => false, // who cares, don't log this
             Err(err) => {
                 log::error("failed to read faythe meta-entry from vault", &err);
                 false
