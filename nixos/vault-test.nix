@@ -92,17 +92,16 @@ nixos-lib.runTest (
                   }
                 ];
               }
-              # Multiple vaultmonitorconfigs break faythe currently, commented out
-              # {
-              #   inherit role_id_path secret_id_path vault_addr;
-              #   key_prefix = "path2";
-              #   specs = [
-              #     {
-              #       name = "path2-test";
-              #       cn = "path2.${domain}";
-              #     }
-              #   ];
-              # }
+              {
+                inherit role_id_path secret_id_path vault_addr;
+                key_prefix = "path2";
+                specs = [
+                  {
+                    name = "path2-test";
+                    cn = "path2.${domain}";
+                  }
+                ];
+              }
             ];
             lets_encrypt_url = "https://${nodes.acme.test-support.acme.caDomain}/dir";
             lets_encrypt_email = "test_mail@${domain}";
@@ -242,8 +241,7 @@ nixos-lib.runTest (
 
       with subtest("Can get certs"):
           client.wait_until_succeeds("""
-            vault kv get kv/path1/path1-test/cert
-            # vault kv get kv/path2/path2-test/cert
+            vault kv get kv/path1/path1-test/cert && vault kv get kv/path2/path2-test/cert
           """)
 
       with subtest("No failed dispatch in vaultrs"):
