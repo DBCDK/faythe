@@ -41,7 +41,7 @@ pub struct Secret {
 
 const TIME_FORMAT: &str = "%Y-%m-%dT%H:%M:%S%z"; // 2019-10-09T11:50:22+0200
 
-pub fn get_secrets(config: &KubeMonitorConfig) -> Result<HashMap<CertName, Secret>, KubeError> {
+pub async fn get_secrets(config: &KubeMonitorConfig) -> Result<HashMap<CertName, Secret>, KubeError> {
 
     let v = kubectl(&["get", "secrets",
         "-l", config.secret_hostlabel.as_str(),
@@ -70,7 +70,7 @@ pub fn get_secrets(config: &KubeMonitorConfig) -> Result<HashMap<CertName, Secre
     Ok(secrets)
 }
 
-pub fn get_ingresses(config: &KubeMonitorConfig) -> Result<Vec<Ingress>, KubeError> {
+pub async fn get_ingresses(config: &KubeMonitorConfig) -> Result<Vec<Ingress>, KubeError> {
     let v = kubectl(&["get", "ingresses", "--all-namespaces"])?;
 
     let mut ingresses :Vec<Ingress> = Vec::new();
@@ -259,7 +259,7 @@ impl CertSpecable for Ingress {
         })
     }
 
-    fn touch(&self, config: &ConfigContainer) -> Result<(), TouchError> {
+    async fn touch(&self, config: &ConfigContainer) -> Result<(), TouchError> {
         let monitor_config = config.get_kube_monitor_config()?;
         match &monitor_config.touch_annotation {
             Some(a) => Ok(self.annotate(&a, &Utc::now().format(TIME_FORMAT).to_string())?),
@@ -267,7 +267,7 @@ impl CertSpecable for Ingress {
         }
     }
 
-    fn should_retry(&self, config: &ConfigContainer) -> bool {
+    async fn should_retry(&self, config: &ConfigContainer) -> bool {
         Utc::now() > self.touched + chrono::Duration::milliseconds(config.faythe_config.issue_grace as i64)
     }
 }

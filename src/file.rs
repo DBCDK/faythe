@@ -151,7 +151,7 @@ impl CertSpecable for FileSpec {
         })
     }
 
-    fn touch(&self, config: &ConfigContainer) -> Result<(), TouchError> {
+    async fn touch(&self, config: &ConfigContainer) -> Result<(), TouchError> {
         let monitor_config = config.get_file_monitor_config()?;
         let names = default_file_names(&self);
         let sub_dir = absolute_dir_path(&monitor_config, names.sub_directory.as_ref());
@@ -164,7 +164,7 @@ impl CertSpecable for FileSpec {
         Ok(())
     }
 
-    fn should_retry(&self, config: &ConfigContainer) -> bool {
+    async fn should_retry(&self, config: &ConfigContainer) -> bool {
         use std::time::Duration;
 
         match || -> Result<(), TouchError> {
@@ -212,6 +212,7 @@ impl FileNames {
     }
 }
 
+#[derive(Debug)]
 pub enum FileError {
     IO
 }
