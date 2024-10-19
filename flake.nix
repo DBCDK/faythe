@@ -26,7 +26,11 @@
       # upstream ideally) so this interface might be brittle, but avoids
       # accidentally passing a detached nixpkgs from its flake (or its follows)
       # on to consumers.
-      craneLib = crane.mkLib final;
+      craneLib = (crane.mkLib final).overrideScope (_: scopePrev: {
+        mkCargoDerivation = args: scopePrev.mkCargoDerivation ({
+          RUSTFLAGS = "-D warnings";
+        } // args);
+      });
     };
   in {
     packages.${system}.${pname} = pkgs.${pname};
