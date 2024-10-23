@@ -372,7 +372,7 @@ impl VaultSpec {
             &persist_spec.vault_addr,
         )
         .await.map_err(|e| {
-            log::error("vault/touch: auth failure", &e);
+            log::error("vault/write_meta_file: auth failure", &e);
             TouchError::Failed
         })?;
 
@@ -384,7 +384,7 @@ impl VaultSpec {
         )
         .await
         .map_err(|e| {
-            log::error("vault/touch: kv2::set failure", &e);
+            log::error("vault/write_meta_file: kv2::set failure", &e);
             TouchError::Failed
         })
         .map(|_| ())
@@ -415,9 +415,35 @@ impl CertSpecable for VaultSpec {
     // Check if meta file is too old, and a new certicate
     // must be issued.
     async fn should_retry(&self, config: &ConfigContainer) -> bool {
-        match self.write_meta_file(config).await {
+        let check_meta: Result<(),VaultError> = async {
+            let monitor_config = config.get_vault_monitor_config()?;
+            let persist_spec = monitor_config.to_persist_spec(&self);
+            let client = authenticate(
+                &persist_spec.role_id_path,
+                &persist_spec.secret_id_path,
+                &persist_spec.vault_addr,
+            ).await?;
+
+            let raw_read: Result<VaultData, ClientError> = kv2::read(&*client, &persist_spec.kv_mount, &persist_spec.paths.meta).await;
+            match raw_read {
+                Ok(value) => {
+                    let time_stamp = chrono::DateTime::parse_from_rfc3339(&value.borrow())?;
+                    let diff = chrono::Utc::now().signed_duration_since(time_stamp);
+                    match diff
+                        > chrono::Duration::milliseconds(
+                            config.faythe_config.issue_grace as i64,
+                        ) {
+                            true => Ok(()),
+                            false => Err(VaultError::RecentlyTouched),
+                        }
+                }
+                Err(_err @ ClientError::APIError { code: 404, .. }) => Ok(()), // if the key doesn't exist, just create it
+                Err(err) => Err(err.into()), // unexpected Vault-error
+            }
+        }.await;
+        match check_meta {
             Ok(()) => true,
-            Err(TouchError::RecentlyTouched) => false, // who cares, don't log this
+            Err(VaultError::RecentlyTouched) => false, // who cares, don't log this
             Err(err) => {
                 log::error("failed to read faythe meta-entry from vault", &err);
                 false
