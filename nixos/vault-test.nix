@@ -130,6 +130,7 @@ nixos-lib.runTest (
             dnsutils
             vault
             getent
+            lsof
           ];
 
           environment.variables.VAULT_ADDR = vault_addr;
