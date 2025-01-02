@@ -4,10 +4,10 @@ version = 3
 
 [[package]]
 name = "acme-lib"
-version = "0.8.1"
-source = "git+https://github.com/DBCDK/acme-lib?branch=dbc-fork#6ae27e4e20ef63790f7337dd289753092478e058"
+version = "0.9.1"
+source = "git+https://github.com/DBCDK/acme-lib?branch=dbc-fork#10bafec177d1754c05a5df61eddbc4e95bb35d7d"
 dependencies = [
- "base64 0.12.3",
+ "base64 0.21.7",
  "lazy_static",
  "log",
  "openssl",
@@ -159,12 +159,6 @@ dependencies = [
  "rustc-demangle",
  "windows-targets 0.52.6",
 ]
-
-[[package]]
-name = "base64"
-version = "0.12.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3441f0f7b02788e948e47f457ca01f1d7e6d92c693bc132c22b087d3141c03ff"
 
 [[package]]
 name = "base64"
