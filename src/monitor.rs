@@ -207,6 +207,9 @@ mod tests {
         let secrets: HashMap<String, kube::Secret> = HashMap::new();
         let thread = thread::spawn(move || inspect(&config, &tx, &ingresses, secrets));
 
+        // test fails with sleep, succeeds without. try_recv is unsafe in the "err" case
+        thread::sleep_ms(5000);
+
         assert!(rx.try_recv().is_err()); // it is not allowed to ask for a wildcard cert in k8s ingress specs
         thread.join().unwrap();
     }
