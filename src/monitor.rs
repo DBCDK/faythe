@@ -202,6 +202,7 @@ mod tests {
         );
     }
 
+    // See note below for reason for test disablement
     //#[test]
     fn test_wildcard_host_in_ingress() {
         let rt = Runtime::new().unwrap();
@@ -211,7 +212,16 @@ mod tests {
         let (tx, mut rx) = create_channel();
         let ingresses = create_ingress(&host);
         let secrets: HashMap<String, kube::Secret> = HashMap::new();
+
+        // Prior to the async version, when this was threaded, this test
+        // appeared to succeed simply because of a race condition here: This
+        // thread would be too fast and conclude that the channel was empty
+        // because the inspect thread had not progressed enough yet. A simple
+        // sleep would have exposed this problem as well, but try_recv really is
+        // race-unsafe in both cases because "empty, so far" and "error, will
+        // continue being empty" are not distinguishable from one another.
         rt.block_on(inspect(&config, &tx, &ingresses, secrets));
+
         assert!(rx.try_recv().is_err()); // it is not allowed to ask for a wildcard cert in k8s ingress specs
     }
 
