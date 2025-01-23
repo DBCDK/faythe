@@ -404,9 +404,6 @@ impl CertSpecable for VaultSpec {
     }
     // Write meta file, meta file just contains a rfc3339 timestamp
     async fn touch(&self, config: &ConfigContainer) -> Result<(), TouchError> {
-        let monitor_config = config.get_vault_monitor_config()?;
-        let persist_spec = monitor_config.to_persist_spec(&self);
-
         self.write_meta_file(config).await.map_err(|e| {
             log::error("failed to write meta file", &e);
             TouchError::Failed
