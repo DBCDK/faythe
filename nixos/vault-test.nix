@@ -246,6 +246,25 @@ nixos-lib.runTest (
             vault kv get kv/path1/path1-test/cert && vault kv get kv/path2/path2-test/cert
           """)
 
+      with subtest("Wakes up on old meta timestamp"):
+          client.succeed("""
+            date +%s > starttime
+            vault kv put kv/path1/path1-test/faythe value=2000-01-01T00:00:00.000+00:00
+          """)
+
+          client.wait_until_succeeds("""
+            journalctl --since "@$(cat starttime)" -u faythe | grep "State for cert: path1.faythe.test" | grep -q "Valid"
+            journalctl --since "@$(cat starttime)" -u faythe | grep "path1-test" | grep -q "touched"
+          """)
+
+          client.succeed("""
+            date -d "$(vault kv get -field value kv/path1/path1-test/faythe)" +%s > refreshtime
+          """)
+
+          client.succeed("""
+            [ $(cat refreshtime) -gt $(cat starttime) ]
+          """)
+
       with subtest("No failed dispatch in vaultrs"):
           client.fail("""
             journalctl -u faythe | grep -q "dispatch task is gone: runtime dropped the dispatch task"
