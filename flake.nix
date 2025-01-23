@@ -32,26 +32,38 @@
     packages.${system}.${pname} = pkgs.${pname};
     defaultPackage.${system} = pkgs.${pname};
 
-    overlays.default = final: prev: {
-      "${pname}" = final.craneLib.buildPackage {
-        src =
-          let
-            srcPath = ./.;
-          in
-            with final; lib.cleanSourceWith {
-              src = srcPath;
-              filter = path: type:
-                craneLib.filterCargoSources path type ||
-                lib.hasPrefix "${toString srcPath}/test" path;
-            };
-        nativeBuildInputs = with final; [
-          pkg-config
-        ];
-        buildInputs = with final; [
-          openssl
-        ];
+    overlays.default = final: prev:
+      let
+        srcPath = ./.;
+        src = with final; lib.cleanSourceWith {
+          src = srcPath;
+          filter = path: type:
+            craneLib.filterCargoSources path type ||
+            lib.hasPrefix "${toString srcPath}/test" path;
+        };
+
+        commonArgs = {
+          inherit src;
+          nativeBuildInputs = with final; [
+            pkg-config
+          ];
+          buildInputs = with final; [
+            openssl
+          ];
+        };
+
+        cargoArtifacts = final.craneLib.buildDepsOnly (commonArgs);
+      in
+      {
+        "${pname}" = final.craneLib.buildPackage (commonArgs // {
+          inherit cargoArtifacts;
+        });
+
+        "${pname}-clippy" = final.craneLib.cargoClippy (commonArgs // {
+          inherit cargoArtifacts;
+          cargoClippyExtraArgs = "--all-targets -- --deny warnings";
+        });
       };
-    };
 
     checks.${system} = {
       sample-configs = pkgs.runCommandNoCC "check-sample-configs" { nativeBuildInputs = [ pkgs.${pname} ]; } ''
@@ -62,12 +74,14 @@
         done
       '';
       vault = pkgs.callPackage ./nixos/vault-test.nix {};
+      clippy = pkgs."${pname}-clippy";
     };
 
     devShell.${system} = with pkgs; mkShell {
       buildInputs = [
         rust-analyzer
         cargo
+        clippy
         crate2nix
         openssl.dev
         pkg-config
