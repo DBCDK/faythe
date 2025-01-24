@@ -166,6 +166,7 @@ nixos-lib.runTest (
             path = with pkgs; [
               vault
               getent
+              openssl
             ];
             environment.VAULT_ADDR = vault_addr;
             wants = [ "vault.service" ];
