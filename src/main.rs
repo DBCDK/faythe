@@ -23,7 +23,6 @@ mod config;
 mod dns;
 mod file;
 mod issuer;
-mod kube;
 mod metrics;
 mod monitor;
 mod vault;
@@ -82,13 +81,6 @@ async fn run(config: &FaytheConfig) {
     let (tx, rx): (Sender<CertSpec>, Receiver<CertSpec>) = mpsc::channel(100);
 
     let mut threads = JoinSet::new();
-    for c in &config.kube_monitor_configs {
-        let container = ConfigContainer {
-            faythe_config: config.clone(),
-            monitor_config: MonitorConfig::Kube(c.to_owned()),
-        };
-        threads.spawn(monitor::monitor_k8s(container, tx.clone()));
-    }
     for c in &config.file_monitor_configs {
         let container = ConfigContainer {
             faythe_config: config.clone(),

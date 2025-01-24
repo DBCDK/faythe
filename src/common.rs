@@ -8,10 +8,9 @@ use self::openssl::x509::{X509NameEntryRef, X509};
 use crate::config::VaultPersistSpec;
 use crate::config::{ConfigContainer, FaytheConfig, Zone};
 use crate::file::FileError;
-use crate::kube::KubeError;
 use crate::vault;
 use crate::vault::VaultError;
-use crate::{file, kube, log};
+use crate::{file, log};
 use acme_lib::order::NewOrder;
 use acme_lib::persist::Persist;
 use acme_lib::{Account, Certificate};
@@ -160,14 +159,6 @@ pub trait Persistable {
 }
 
 #[derive(Debug, Clone, Serialize)]
-pub struct KubernetesPersistSpec {
-    pub name: String,
-    pub namespace: String,
-    pub host_label_key: String,
-    pub host_label_value: String
-}
-
-#[derive(Debug, Clone, Serialize)]
 pub struct FilePersistSpec {
     pub private_key_path: PathBuf,
     pub public_key_path: PathBuf
@@ -175,7 +166,6 @@ pub struct FilePersistSpec {
 
 #[derive(Debug, Clone, Serialize)]
 pub enum PersistSpec {
-    KUBERNETES(KubernetesPersistSpec),
     FILE(FilePersistSpec),
     VAULT(VaultPersistSpec),
     #[allow(dead_code)]
@@ -185,18 +175,11 @@ pub enum PersistSpec {
 impl Persistable for CertSpec {
     async fn persist(&self, cert: Certificate) -> Result<(), PersistError> {
         match &self.persist_spec {
-            PersistSpec::KUBERNETES(spec) => Ok(kube::persist(&spec, &cert)?),
             PersistSpec::FILE(spec) => Ok(file::persist(&spec, &cert)?),
             PersistSpec::VAULT(spec) => Ok(vault::persist(&spec, cert).await?),
             //PersistSpec::FILE(_spec) => { unimplemented!() },
             PersistSpec::DONTPERSIST => { Ok(()) }
         }
-    }
-}
-
-impl std::convert::From<KubeError> for PersistError {
-    fn from(err: KubeError) -> Self {
-        PersistError::Kube(err)
     }
 }
 
@@ -301,7 +284,6 @@ impl Cert {
 }
 
 pub enum PersistError {
-    Kube(KubeError),
     File(FileError),
     Vault(VaultError),
 }
@@ -391,12 +373,11 @@ impl std::convert::From<TimeError> for CertState {
 pub mod tests {
 
     use super::*;
-    use crate::kube::Ingress;
     use crate::file::FileSpec;
     use std::collections::HashMap;
     use crate::set;
     use super::DNSName;
-    use crate::config::{ChallengeDriver, KubeMonitorConfig, FileMonitorConfig, MonitorConfig};
+    use crate::config::{ChallengeDriver, FileMonitorConfig, MonitorConfig};
     use chrono::DateTime;
 
     const TIME_FORMAT: &str = "%Y-%m-%dT%H:%M:%S%z"; // 2019-10-09T11:50:22+0200
@@ -410,7 +391,6 @@ pub mod tests {
         let zones = create_zones(issue_wildcard_certs);
         let faythe_config = FaytheConfig{
             metrics_port: 9105,
-            kube_monitor_configs: vec!(),
             file_monitor_configs: vec![file_monitor_configs.clone()],
             vault_monitor_configs: vec![],
             lets_encrypt_url: String::new(),
@@ -452,35 +432,6 @@ pub mod tests {
         zones
     }
 
-    pub fn create_test_kubernetes_config(issue_wildcard_certs: bool) -> ConfigContainer {
-        let kube_monitor_config = KubeMonitorConfig {
-            secret_namespace: String::new(),
-            secret_hostlabel: String::new(),
-            touch_annotation: None,
-            wildcard_cert_prefix: String::from("wild---card")
-        };
-        let zones = create_zones(issue_wildcard_certs);
-        let faythe_config = FaytheConfig{
-            metrics_port: 9105,
-            kube_monitor_configs: vec![kube_monitor_config.clone()],
-            file_monitor_configs: vec![],
-            vault_monitor_configs: vec![],
-            lets_encrypt_url: String::new(),
-            lets_encrypt_proxy: None,
-            lets_encrypt_email: String::new(),
-            val_dns_servers: Vec::new(),
-            monitor_interval: 0,
-            renewal_threshold: 30,
-            issue_grace: 0,
-            zones
-        };
-
-        ConfigContainer{
-            faythe_config,
-            monitor_config: MonitorConfig::Kube(kube_monitor_config)
-        }
-    }
-
     fn create_test_certspec(cn: &str, sans: HashSet<String>) -> CertSpec {
 
         let name = cn.to_string();
@@ -493,15 +444,6 @@ pub mod tests {
             cn,
             sans,
             persist_spec
-        }
-    }
-
-    fn create_ingress(host: &str) -> Ingress {
-        Ingress{
-            name: "test".to_string(),
-            namespace: "test".to_string(),
-            touched: DateTime::<Utc>::MIN_UTC,
-            hosts: [host.to_string()].to_vec(),
         }
     }
 
@@ -534,7 +476,7 @@ pub mod tests {
         assert_eq!(cert.valid_from, DateTime::parse_from_str("2020-12-01T11:42:07+0000", TIME_FORMAT).unwrap());
         assert_eq!(cert.valid_to, DateTime::parse_from_str("2050-11-24T11:42:07+0000", TIME_FORMAT).unwrap());
 
-        let config = create_test_kubernetes_config(false).faythe_config;
+        let config = create_test_file_config(false).faythe_config;
         let spec = create_test_certspec(cn, sans);
 
         assert_eq!(cert.state(&config, &spec), CertState::Valid);
@@ -556,7 +498,7 @@ pub mod tests {
         assert_eq!(cert.valid_from, DateTime::parse_from_str("2020-12-01T11:42:07+0000", TIME_FORMAT).unwrap());
         assert_eq!(cert.valid_to, DateTime::parse_from_str("2050-11-24T11:42:07+0000", TIME_FORMAT).unwrap());
 
-        let config = create_test_kubernetes_config(false).faythe_config;
+        let config = create_test_file_config(false).faythe_config;
         let spec = create_test_certspec(cn, sans);
 
         assert_eq!(cert.state(&config, &spec), CertState::CNDoesntMatch);
@@ -577,7 +519,7 @@ pub mod tests {
 
         let cn = "cn.longlived";
         let sans = set![cn, "san1.longlived", "san2.shortlived"];
-        let config = create_test_kubernetes_config(false).faythe_config;
+        let config = create_test_file_config(false).faythe_config;
         let spec = create_test_certspec(cn, sans);
 
         assert_eq!(cert.state(&config, &spec), CertState::SANSDontMatch);
@@ -585,7 +527,7 @@ pub mod tests {
 
         let cn = "cn.longlived";
         let sans = set![cn, "san1.longlived", "san2.longlived", "san3.longlived"];
-        let config = create_test_kubernetes_config(false).faythe_config;
+        let config = create_test_file_config(false).faythe_config;
         let spec = create_test_certspec(cn, sans);
 
         assert_eq!(cert.state(&config, &spec), CertState::SANSDontMatch);
@@ -593,7 +535,7 @@ pub mod tests {
 
         let cn = "cn.longlived";
         let sans = set!["san2.longlived", "san1.longlived", cn]; // order of sans doesn't matter
-        let config = create_test_kubernetes_config(false).faythe_config;
+        let config = create_test_file_config(false).faythe_config;
         let spec = create_test_certspec(cn, sans);
 
         assert_eq!(cert.state(&config, &spec), CertState::Valid);
@@ -601,7 +543,7 @@ pub mod tests {
 
         let cn = "cn.longlived";
         let sans = set![cn, "san2.longlived", "san1.longlived", "san2.longlived"]; // same san can be passed multiple times to the san set
-        let config = create_test_kubernetes_config(false).faythe_config;
+        let config = create_test_file_config(false).faythe_config;
         let spec = create_test_certspec(cn, sans);
 
         assert_eq!(cert.state(&config, &spec), CertState::Valid);
@@ -626,7 +568,7 @@ pub mod tests {
         assert_eq!(cert.valid_from, DateTime::parse_from_str("2020-12-01T11:41:19+0000", TIME_FORMAT).unwrap());
         assert_eq!(cert.valid_to, DateTime::parse_from_str("2020-12-02T11:41:19+0000", TIME_FORMAT).unwrap());
 
-        let config = create_test_kubernetes_config(false).faythe_config;
+        let config = create_test_file_config(false).faythe_config;
         let spec = create_test_certspec(cn, sans);
 
         assert!(cert.state(&config, &spec) == CertState::ExpiresSoon || cert.state(&config, &spec) == CertState::Expired);
@@ -636,7 +578,7 @@ pub mod tests {
     #[test]
     fn test_find_zone() {
         {
-            let config = create_test_kubernetes_config(false);
+            let config = create_test_file_config(false);
 
             let host: DNSName = DNSName::try_from(&String::from("host1.subdivision.unit.wrongtest")).unwrap();
             let zone = host.find_zone(&config.faythe_config);
@@ -660,7 +602,7 @@ pub mod tests {
         }
 
         {
-            let config = create_test_kubernetes_config(false);
+            let config = create_test_file_config(false);
 
             let host: DNSName = DNSName::try_from(&String::from("host1.subdivision.unit.test")).unwrap();
             let zone = host.find_zone(&config.faythe_config).unwrap();
@@ -691,9 +633,9 @@ pub mod tests {
         assert_eq!(cert.cn, cn);
         assert_eq!(cert.sans, sans);
 
-        let container = create_test_kubernetes_config(true);
+        let container = create_test_file_config(true);
         let config = &container.faythe_config;
-        let spec = create_ingress("foo.unit.test").to_cert_spec(&container).unwrap();
+        let spec = create_filespec("foo.unit.test").to_cert_spec(&container).unwrap();
 
         assert!(cert.state(&config, &spec) == CertState::Valid);
         assert!(cert.is_valid(&config, &spec));
