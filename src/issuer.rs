@@ -23,7 +23,6 @@ use trust_dns_resolver::error::ResolveErrorKind;
 use std::net::IpAddr;
 use tokio::sync::RwLock;
 use std::fmt::Debug;
-use crate::dns::DNSError;
 
 use crate::metrics;
 use crate::metrics::MetricsType;
