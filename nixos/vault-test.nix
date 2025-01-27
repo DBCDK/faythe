@@ -13,6 +13,22 @@ let
   # dev server
   vault_addr = "http://localhost:8200";
 
+  # Pebble in version > 2.3.1 (NixOS 24.11 and up) is ramping up towards ACME
+  # profiles and not issuing CNs for tlsserver profile certs. We want to test
+  # against behaviour that matches the current letsencrypt behaviour, so stick
+  # to 2.3.1.
+  pebble-cn-overlay = self: super: {
+    pebble = super.pebble.overrideAttrs (oa: rec {
+      version = "2.3.1";
+      src = self.fetchFromGitHub {
+        owner = "letsencrypt";
+        repo = "pebble";
+        rev = "v${version}";
+        hash = "sha256-S9+iRaTSRt4F6yMKK0OJO6Zto9p0dZ3q/mULaipudVo=";
+      };
+    });
+  };
+
 in
 nixos-lib.runTest (
   test@{ nodes, ... }:
@@ -20,6 +36,7 @@ nixos-lib.runTest (
     hostPkgs = pkgs;
     name = "faythe-vault-test";
     defaults = {
+      nixpkgs.overlays = [ pebble-cn-overlay ];
       nixpkgs.pkgs = pkgs;
       networking.nameservers = lib.mkForce [ nodes.ns.networking.primaryIPAddress ];
       networking.dhcpcd.enable = false;
@@ -149,6 +166,7 @@ nixos-lib.runTest (
             path = with pkgs; [
               vault
               getent
+              openssl
             ];
             environment.VAULT_ADDR = vault_addr;
             wants = [ "vault.service" ];
