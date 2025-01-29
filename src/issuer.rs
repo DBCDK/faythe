@@ -243,7 +243,10 @@ impl std::convert::From<common::SpecError> for IssuerError {
 #[derive(Debug)]
 enum ResolverError<'l> {
     SystemResolveConf,
-    NoIpsForResolversFound(&'l String),
+    NoIpsForResolversFound(
+        #[allow(dead_code)]
+        &'l String
+    ),
     Other
 }
 
