@@ -116,7 +116,7 @@ pub async fn list(config: &VaultMonitorConfig) -> Result<HashMap<CertName, Vault
             kv2::read(&*client, &config.kv_mount, &vault_paths.cert).await;
 
         match cert_raw {
-            Ok(raw) => match Cert::parse(&raw.value.as_bytes().to_vec()) {
+            Ok(raw) => match Cert::parse(raw.value.as_bytes()) {
                 Ok(cert) => {
                     certs.insert(s.name.to_string(), VaultCert { cert });
                 }
@@ -198,11 +198,7 @@ pub async fn authenticate(
             let client = &**client;
             let renewed_client = renew_client(client).await;
 
-            match renewed_client {
-                Ok(_) => true,
-                Err(ClientError::APIError { code: 404, .. }) => true,
-                _ => false,
-            }
+            matches!(renewed_client, Ok(_) | Err(ClientError::APIError { code: 404, .. }))
         }
         _ => false,
     };
@@ -398,7 +394,7 @@ impl CertSpecable for VaultSpec {
             name: self.name.clone(),
             cn,
             sans: self.get_computed_sans(&config.faythe_config)?,
-            persist_spec: PersistSpec::VAULT(monitor_config.to_persist_spec(self)),
+            persist_spec: PersistSpec::Vault(monitor_config.to_persist_spec(self)),
         })
     }
     // Write meta file, meta file just contains a rfc3339 timestamp

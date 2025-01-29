@@ -23,11 +23,8 @@ pub fn read_certs(config: &FileMonitorConfig) -> Result<HashMap<CertName, FileCe
         let names = default_file_names(s);
         names.insert_into(config, &mut wanted_files);
         let raw = read_file(absolute_file_path(config, &names, &names.cert).as_path()).unwrap_or_default();
-        let cert = Cert::parse(&raw);
-        if cert.is_ok() {
-            certs.insert(s.name.clone(), FileCert{
-                cert: cert.unwrap()
-            });
+        if let Ok(cert) = Cert::parse(&raw) {
+            certs.insert(s.name.clone(), FileCert{cert});
         } else {
             log::data("dropping secret due to invalid cert", &names.cert);
         }
@@ -144,7 +141,7 @@ impl CertSpecable for FileSpec {
             name: self.name.clone(),
             cn,
             sans: self.get_computed_sans(&config.faythe_config)?,
-            persist_spec: PersistSpec::FILE(FilePersistSpec{
+            persist_spec: PersistSpec::File(FilePersistSpec{
                 private_key_path: absolute_file_path(monitor_config, &names, &names.key),
                 public_key_path: absolute_file_path(monitor_config, &names, &names.cert),
             }),
@@ -167,7 +164,7 @@ impl CertSpecable for FileSpec {
     async fn should_retry(&self, config: &ConfigContainer) -> bool {
         use std::time::Duration;
 
-        match || -> Result<(), TouchError> {
+        !matches!(|| -> Result<(), TouchError> {
             let monitor_config = config.get_file_monitor_config()?;
             let names = default_file_names(self);
             let file = File::open(absolute_file_path(monitor_config, &names, &names.meta))?;
@@ -178,10 +175,7 @@ impl CertSpecable for FileSpec {
                 true => Ok(()),
                 false => Err(TouchError::RecentlyTouched)
             }
-        }() {
-            Err(TouchError::RecentlyTouched) => false,
-            _ => true,
-        }
+        }(), Err(TouchError::RecentlyTouched))
     }
 }
 
