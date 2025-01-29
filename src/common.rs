@@ -25,18 +25,18 @@ pub type CertName = String;
 #[derive(Debug, Clone, Serialize)]
 pub struct CertSpec {
     pub name: CertName,
-    pub cn: DNSName,
-    pub sans: HashSet<DNSName>,
+    pub cn: DnsName,
+    pub sans: HashSet<DnsName>,
     pub persist_spec: PersistSpec,
 }
 
 #[derive(Debug, Serialize, Clone, PartialEq, Eq, Hash)]
-pub struct DNSName {
+pub struct DnsName {
     pub name: String,
     pub is_wildcard: bool
 }
 
-impl std::convert::TryFrom<&String> for DNSName {
+impl std::convert::TryFrom<&String> for DnsName {
     type Error = SpecError;
 
     fn try_from(value: &String) -> Result<Self, Self::Error> {
@@ -44,7 +44,7 @@ impl std::convert::TryFrom<&String> for DNSName {
             static ref RE: Regex = Regex::new("^(\\*\\.)?(([a-zA-Z0-9]|[a-zA-Z0-9][a-zA-Z0-9\\-]*[a-zA-Z0-9])\\.)*([A-Za-z0-9]|[A-Za-z0-9][A-Za-z0-9\\-]*[A-Za-z0-9])$").unwrap();
         }
         if RE.is_match(value) {
-            Ok(DNSName{
+            Ok(DnsName{
                 name: String::from(value.clone().trim_start_matches("*.")),
                 is_wildcard: value.starts_with("*.")
             })
@@ -54,7 +54,7 @@ impl std::convert::TryFrom<&String> for DNSName {
     }
 }
 
-impl DNSName {
+impl DnsName {
 
     fn generic_checks<'l>(&self, config: &'l FaytheConfig) -> Result<&'l Zone, SpecError> {
         let zone: &'l Zone = self.find_zone(config)?;
@@ -74,13 +74,13 @@ impl DNSName {
         self.to_string(false)
     }
 
-    pub fn to_wildcard(&self) -> Result<DNSName, SpecError> {
+    pub fn to_wildcard(&self) -> Result<DnsName, SpecError> {
         let mut iter = self.name.split('.');
         let first = iter.next();
         match first {
             Some(_) => {
                 let parts: Vec<&str> = iter.collect();
-                Ok(DNSName {
+                Ok(DnsName {
                     name: parts.join("."),
                     is_wildcard: true
                 })
@@ -121,14 +121,14 @@ impl DNSName {
     }
 }
 
-impl std::fmt::Display for DNSName {
+impl std::fmt::Display for DnsName {
     fn fmt(&self, f: &mut Formatter<'_>) -> Result<(), std::fmt::Error> {
         write!(f, "{}", self.to_domain_string())
     }
 }
 
 impl CertSpec {
-    pub fn to_acme_order<'l, P>(&self, acc: &Account<P>) -> Result<NewOrder<P>, acme_lib::Error> where P: Persist {
+    pub fn to_acme_order<P>(&self, acc: &Account<P>) -> Result<NewOrder<P>, acme_lib::Error> where P: Persist {
         let mut sans: Vec<String> = Vec::new();
         for s in &self.sans {
             sans.push(s.to_domain_string());
@@ -164,21 +164,22 @@ pub struct FilePersistSpec {
     pub public_key_path: PathBuf
 }
 
+#[allow(clippy::large_enum_variant)] // We don't care about the mem use difference here
 #[derive(Debug, Clone, Serialize)]
 pub enum PersistSpec {
-    FILE(FilePersistSpec),
-    VAULT(VaultPersistSpec),
+    File(FilePersistSpec),
+    Vault(VaultPersistSpec),
     #[allow(dead_code)]
-    DONTPERSIST
+    DontPersist
 }
 
 impl Persistable for CertSpec {
     async fn persist(&self, cert: Certificate) -> Result<(), PersistError> {
         match &self.persist_spec {
-            PersistSpec::FILE(spec) => Ok(file::persist(spec, &cert)?),
-            PersistSpec::VAULT(spec) => Ok(vault::persist(spec, cert).await?),
+            PersistSpec::File(spec) => Ok(file::persist(spec, &cert)?),
+            PersistSpec::Vault(spec) => Ok(vault::persist(spec, cert).await?),
             //PersistSpec::FILE(_spec) => { unimplemented!() },
-            PersistSpec::DONTPERSIST => { Ok(()) }
+            PersistSpec::DontPersist => { Ok(()) }
         }
     }
 }
@@ -197,7 +198,7 @@ pub struct Cert {
 }
 
 impl Cert {
-    pub fn parse(pem_bytes: &Vec<u8>) -> Result<Cert, CertState> {
+    pub fn parse(pem_bytes: &[u8]) -> Result<Cert, CertState> {
         if pem_bytes.is_empty() {
             return Err(CertState::Empty)
         }
@@ -229,9 +230,9 @@ impl Cert {
         let mut out: HashSet<String> = HashSet::new();
         if x509.subject_alt_names().is_some() {
             for n in x509.subject_alt_names().unwrap() {
-                let dns_name = n.dnsname();
-                if dns_name.is_some() { // ip sans etc. are not supported currently
-                    out.insert(String::from(dns_name.unwrap()));
+                // ip sans etc. are not supported currently
+                if let Some(dns_name) = n.dnsname() {
+                    out.insert(String::from(dns_name));
                 }
             }
         }
@@ -315,17 +316,17 @@ pub trait IssueSource {
     fn get_raw_cn(&self) -> String;
     fn get_raw_sans(&self) -> HashSet<String>;
 
-    fn get_computed_cn(&self, config: &FaytheConfig) -> Result<DNSName, SpecError> {
-        let cn = DNSName::try_from(&self.get_raw_cn())?;
+    fn get_computed_cn(&self, config: &FaytheConfig) -> Result<DnsName, SpecError> {
+        let cn = DnsName::try_from(&self.get_raw_cn())?;
         let zone = cn.generic_checks(config)?;
         Ok(match zone.issue_wildcard_certs {
             true => cn.to_wildcard()?,
             false => cn
         })
     }
-    fn get_computed_sans(&self, config: &FaytheConfig) -> Result<HashSet<DNSName>, SpecError> {
+    fn get_computed_sans(&self, config: &FaytheConfig) -> Result<HashSet<DnsName>, SpecError> {
         let mut out = HashSet::new();
-        let cn = DNSName::try_from(&self.get_raw_cn())?;
+        let cn = DnsName::try_from(&self.get_raw_cn())?;
 
         let raw_sans = self.get_raw_sans();
         let zone = cn.generic_checks(config)?;
@@ -334,7 +335,7 @@ pub trait IssueSource {
         }
 
         for s in &raw_sans {
-            let s_ = DNSName::try_from(s)?;
+            let s_ = DnsName::try_from(s)?;
             s_.generic_checks(config)?;
             out.insert(s_);
         }
@@ -345,7 +346,7 @@ pub trait IssueSource {
 #[derive(Debug, Clone, Serialize)]
 pub enum SpecError {
     InvalidHostname,
-    NonAuthoritativeDomain(DNSName),
+    NonAuthoritativeDomain(DnsName),
     WildcardHostnameNotAllowedWithAutoWildcardIssuingEnabled,
     SansNotSupportedWithAutoWildcardIssuingEnabled,
     InvalidConfig
@@ -376,7 +377,7 @@ pub mod tests {
     use crate::file::FileSpec;
     use std::collections::HashMap;
     use crate::set;
-    use super::DNSName;
+    use super::DnsName;
     use crate::config::{ChallengeDriver, FileMonitorConfig, MonitorConfig};
     use chrono::DateTime;
 
@@ -435,9 +436,9 @@ pub mod tests {
     fn create_test_certspec(cn: &str, sans: HashSet<String>) -> CertSpec {
 
         let name = cn.to_string();
-        let cn = DNSName::try_from(&cn.to_string()).unwrap();
-        let sans: HashSet<DNSName> = sans.iter().map(|s| DNSName::try_from(&s.to_string()).unwrap()).collect();
-        let persist_spec = PersistSpec::DONTPERSIST; 
+        let cn = DnsName::try_from(&cn.to_string()).unwrap();
+        let sans: HashSet<DnsName> = sans.iter().map(|s| DnsName::try_from(&s.to_string()).unwrap()).collect();
+        let persist_spec = PersistSpec::DontPersist;
 
         CertSpec {
             name,
@@ -580,23 +581,23 @@ pub mod tests {
         {
             let config = create_test_file_config(false);
 
-            let host: DNSName = DNSName::try_from(&String::from("host1.subdivision.unit.wrongtest")).unwrap();
+            let host: DnsName = DnsName::try_from(&String::from("host1.subdivision.unit.wrongtest")).unwrap();
             let zone = host.find_zone(&config.faythe_config);
             assert!(zone.is_err());
 
-            let host: DNSName = DNSName::try_from(&String::from("host1.subdivision.foo.test")).unwrap();
+            let host: DnsName = DnsName::try_from(&String::from("host1.subdivision.foo.test")).unwrap();
             let zone = host.find_zone(&config.faythe_config);
             assert!(zone.is_err());
 
-            let host: DNSName = DNSName::try_from(&String::from("test")).unwrap();
+            let host: DnsName = DnsName::try_from(&String::from("test")).unwrap();
             let zone = host.find_zone(&config.faythe_config);
             assert!(zone.is_err());
 
-            let host: DNSName = DNSName::try_from(&String::from("google.com")).unwrap();
+            let host: DnsName = DnsName::try_from(&String::from("google.com")).unwrap();
             let zone = host.find_zone(&config.faythe_config);
             assert!(zone.is_err());
 
-            let host: DNSName = DNSName::try_from(&String::from("host1.subdivision.unit.test")).unwrap();
+            let host: DnsName = DnsName::try_from(&String::from("host1.subdivision.unit.test")).unwrap();
             let zone = host.find_zone(&config.faythe_config);
             assert!(zone.is_ok());
         }
@@ -604,19 +605,19 @@ pub mod tests {
         {
             let config = create_test_file_config(false);
 
-            let host: DNSName = DNSName::try_from(&String::from("host1.subdivision.unit.test")).unwrap();
+            let host: DnsName = DnsName::try_from(&String::from("host1.subdivision.unit.test")).unwrap();
             let zone = host.find_zone(&config.faythe_config).unwrap();
             assert_eq!(zone.auth_dns_server, "ns.unit.test");
 
-            let host: DNSName = DNSName::try_from(&String::from("host1.subdivision.alternative.unit.test")).unwrap();
+            let host: DnsName = DnsName::try_from(&String::from("host1.subdivision.alternative.unit.test")).unwrap();
             let zone = host.find_zone(&config.faythe_config).unwrap();
             assert_eq!(zone.auth_dns_server, "ns.alternative.unit.test");
 
-            let host: DNSName = DNSName::try_from(&String::from("host1.subdivision.other-alternative.unit.test")).unwrap();
+            let host: DnsName = DnsName::try_from(&String::from("host1.subdivision.other-alternative.unit.test")).unwrap();
             let zone = host.find_zone(&config.faythe_config).unwrap();
             assert_eq!(zone.auth_dns_server, "ns.unit.test");
 
-            let host: DNSName = DNSName::try_from(&String::from("unit.test")).unwrap();
+            let host: DnsName = DnsName::try_from(&String::from("unit.test")).unwrap();
             let zone = host.find_zone(&config.faythe_config).unwrap();
             assert_eq!(zone.auth_dns_server, "ns.unit.test");
         }

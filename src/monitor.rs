@@ -217,7 +217,6 @@ mod tests {
     fn test_not_yet_time_for_renewal() {
         let rt = Runtime::new().unwrap();
         let host = String::from("renewal2.subdivision.unit.test");
-        let name = host.clone();
 
         let config = create_test_file_config(false);
         let (tx, mut rx) = create_channel();

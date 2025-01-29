@@ -11,7 +11,7 @@ use std::collections::{VecDeque, HashSet, HashMap};
 use acme_lib::{ClientConfig, Directory, DirectoryUrl, create_rsa_key};
 use acme_lib::persist::MemoryPersist;
 
-use crate::common::{CertSpec, Persistable, PersistError, DNSName};
+use crate::common::{CertSpec, Persistable, PersistError, DnsName};
 use acme_lib::order::{Auth, NewOrder};
 use std::prelude::v1::Vec;
 
@@ -84,8 +84,8 @@ async fn check_queue(queue: &mut VecDeque<IssueOrder>) -> Result<(), IssuerError
                     }
                 },
                 Err(e) => match e {
-                    IssuerError::DNS(dns::DNSError::WrongAnswer(domain)) => {
-                        log::data("Wrong DNS answer", &domain);
+                    IssuerError::Dns(dns::DnsError::WrongAnswer(domain)) => {
+                        log::data("Wrong Dns answer", &domain);
                         // Retry for two hours. Propagation on gratisdns is pretty slow.
                         if Utc::now() < order.challenge_time + chrono::Duration::minutes(120) {
                             queue.push_back(order);
@@ -108,7 +108,7 @@ async fn check_queue(queue: &mut VecDeque<IssueOrder>) -> Result<(), IssuerError
 
 async fn validate_challenge(order: &IssueOrder) -> Result<(), IssuerError> {
     for a in &order.authorizations {
-        let domain = DNSName::try_from(&String::from(a.domain_name()))?;
+        let domain = DnsName::try_from(&String::from(a.domain_name()))?;
         let challenge = a.dns_challenge();
         let proof = challenge.dns_proof();
         let log_data = json!({ "domain": &domain, "proof": &proof });
@@ -158,7 +158,7 @@ fn setup_challenge(config: &FaytheConfig, spec: &CertSpec) -> Result<IssueOrder,
         // LE may require validation for only a subset of requested domains
         if a.need_challenge() {
             let challenge = a.dns_challenge();
-            let domain = DNSName::try_from(&String::from(a.domain_name()))?;
+            let domain = DnsName::try_from(&String::from(a.domain_name()))?;
             dns::add(config, &domain, &challenge.dns_proof())?;
         }
     }
@@ -212,13 +212,13 @@ pub enum IssuerError {
     ConfigurationError,
     ChallengeRejected,
     AcmeClient (acme_lib::Error),
-    DNS (dns::DNSError),
+    Dns (dns::DnsError),
     PersistError
 }
 
-impl std::convert::From<dns::DNSError> for IssuerError {
-    fn from(error: dns::DNSError) -> IssuerError {
-        IssuerError::DNS(error)
+impl std::convert::From<dns::DnsError> for IssuerError {
+    fn from(error: dns::DnsError) -> IssuerError {
+        IssuerError::Dns(error)
     }
 }
 

@@ -1,24 +1,24 @@
 use std::process::{Command, Stdio};
 use crate::exec::{SpawnOk, OpenStdin, Wait};
-use crate::dns::DNSError;
+use crate::dns::DnsError;
 
 use super::ChallengeDriver;
 use crate::config::NSUpdateDriver;
 
 impl ChallengeDriver for NSUpdateDriver {
-    fn add(&self, challenge_host: &String, proof: &String) -> Result<(), DNSError> {
+    fn add(&self, challenge_host: &String, proof: &String) -> Result<(), DnsError> {
         let command = self.add_cmd(challenge_host, proof);
         self.update_dns(&command)
     }
 
-    fn delete(&self, challenge_host: &String) -> Result<(), DNSError> {
+    fn delete(&self, challenge_host: &String) -> Result<(), DnsError> {
         let command = self.delete_cmd(challenge_host);
         self.update_dns(&command)
     }
 }
 
 impl NSUpdateDriver {
-    fn update_dns(&self, command: &String) -> Result<(), DNSError> {
+    fn update_dns(&self, command: &String) -> Result<(), DnsError> {
         let mut cmd = Command::new("nsupdate");
         let mut child = cmd.arg("-k")
             .arg(&self.key)
@@ -53,20 +53,20 @@ impl NSUpdateDriver {
 mod tests {
     // Note this useful idiom: importing names from outer (for mod tests) scope.
     use super::*;
-    use crate::common::PersistSpec::DONTPERSIST;
+    use crate::common::PersistSpec::DontPersist;
     use std::convert::TryFrom;
     use std::collections::HashSet;
     use crate::common::tests::*;
-    use crate::common::{CertSpec, DNSName};
+    use crate::common::{CertSpec, DnsName};
     use crate::dns::challenge_host;
 
     fn create_cert_spec(cn: &String) -> CertSpec {
-        let dns_name = DNSName::try_from(cn).unwrap();
+        let dns_name = DnsName::try_from(cn).unwrap();
         CertSpec{
             name: String::from("test"),
             cn: dns_name,
             sans: HashSet::new(),
-            persist_spec: DONTPERSIST,
+            persist_spec: DontPersist,
         }
     }
 

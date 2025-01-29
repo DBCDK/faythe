@@ -1,4 +1,4 @@
-use crate::dns::DNSError;
+use crate::dns::DnsError;
 
 use super::ChallengeDriver;
 use crate::config::WebhookDriver;
@@ -9,7 +9,7 @@ use std::convert::Into;
 use std::time::Duration;
 
 impl ChallengeDriver for WebhookDriver {
-  fn add(&self, challenge_host: &String, proof: &String) -> Result<(), DNSError> {
+  fn add(&self, challenge_host: &String, proof: &String) -> Result<(), DnsError> {
     self.exec_add(Payload {
       records: vec![(challenge_host.clone(), Record {
         record_type: RecordType::TXT,
@@ -18,7 +18,7 @@ impl ChallengeDriver for WebhookDriver {
     })
   }
 
-  fn delete(&self, challenge_host: &String) -> Result<(), DNSError> {
+  fn delete(&self, challenge_host: &String) -> Result<(), DnsError> {
     self.exec_delete(Payload {
       records: vec![(challenge_host.clone(), Record {
         record_type: RecordType::TXT,
@@ -42,6 +42,7 @@ struct Record {
 
 #[derive(Debug, Serialize)]
 enum RecordType {
+  #[allow(clippy::upper_case_acronyms)]
   TXT,
 }
 
@@ -59,7 +60,7 @@ impl WebhookDriver {
     client.build()
   }
   
-  fn exec_add(&self, body: Payload) -> Result<(), DNSError> {
+  fn exec_add(&self, body: Payload) -> Result<(), DnsError> {
     self.get_client()?
       .put(self.url.clone())
       .json(&body)
@@ -68,7 +69,7 @@ impl WebhookDriver {
       .map_err(Into::into)
   }
 
-  fn exec_delete(&self, body: Payload) -> Result<(), DNSError> {
+  fn exec_delete(&self, body: Payload) -> Result<(), DnsError> {
     self.get_client()?
       .delete(self.url.clone())
       .json(&body)
