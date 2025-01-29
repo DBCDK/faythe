@@ -143,10 +143,6 @@ fn default_renewal_threshold() -> u16 { 30 }
 
 fn default_issue_wildcard_certs() -> bool { false }
 
-fn default_wildcard_cert_k8s_prefix() -> String { "wild--card".to_string() }
-
-fn default_k8s_touch_annotation() -> Option<String> { Some("faythe.touched".to_string()) }
-
 fn default_metrics_port() -> u16 {
     9105
 }
