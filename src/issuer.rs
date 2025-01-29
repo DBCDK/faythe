@@ -211,6 +211,7 @@ impl IssueOrder {
 pub enum IssuerError {
     ConfigurationError,
     ChallengeRejected,
+    #[allow(dead_code)] // Debug only
     AcmeClient (acme_lib::Error),
     Dns (dns::DnsError),
     PersistError
@@ -243,6 +244,7 @@ impl std::convert::From<common::SpecError> for IssuerError {
 #[derive(Debug)]
 enum ResolverError<'l> {
     SystemResolveConf,
+    #[allow(dead_code)] // Debug only
     NoIpsForResolversFound(&'l String),
     Other
 }

@@ -58,10 +58,15 @@ fn default_private_key_suffix() -> String {
 
 #[derive(Debug)]
 pub enum VaultError {
+    #[allow(dead_code)] // Debug only
     Client(ClientError),
+    #[allow(dead_code)] // Debug only
     IO(std::io::Error),
+    #[allow(dead_code)] // Debug only
     SpecError(crate::common::SpecError),
+    #[allow(dead_code)] // Debug only
     TimeStampParseError(chrono::ParseError),
+    #[allow(dead_code)] // Debug only
     UTF8(std::str::Utf8Error),
     RecentlyTouched,
 }

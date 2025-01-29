@@ -21,12 +21,17 @@ mod webhook;
 
 #[derive(Debug)]
 pub enum DnsError {
+    #[allow(dead_code)] // Debug only
     Exec(ExecErrorInfo),
+    #[allow(dead_code)] // Debug only
     IO(std::io::Error),
     OutputFormat,
+    #[allow(dead_code)] // Debug only
     ResolveError(ResolveError),
+    #[allow(dead_code)] // Debug only
     WrongAnswer(String),
     WrongSpec,
+    #[allow(dead_code)] // Debug only
     Reqwest(reqwest::Error),
 }
 
