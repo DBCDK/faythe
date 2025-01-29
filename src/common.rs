@@ -185,6 +185,7 @@ impl Persistable for CertSpec {
 }
 
 pub enum TimeError {
+    #[allow(dead_code)] // Debug only
     Diff(openssl::error::ErrorStack),
     UnixTimestampOutOfBounds,
 }
@@ -286,6 +287,7 @@ impl Cert {
 
 pub enum PersistError {
     File(FileError),
+    #[allow(dead_code)] // Debug only
     Vault(VaultError),
 }
 
