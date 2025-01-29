@@ -57,7 +57,7 @@ impl std::convert::TryFrom<&String> for DNSName {
 impl DNSName {
 
     fn generic_checks<'l>(&self, config: &'l FaytheConfig) -> Result<&'l Zone, SpecError> {
-        let zone: &'l Zone = self.find_zone(&config)?;
+        let zone: &'l Zone = self.find_zone(config)?;
         if zone.issue_wildcard_certs && self.is_wildcard {
             return Err(SpecError::WildcardHostnameNotAllowedWithAutoWildcardIssuingEnabled)
         }
@@ -134,13 +134,13 @@ impl CertSpec {
             sans.push(s.to_domain_string());
         }
         let sans_: Vec<&str> = sans.iter().map(|s| s.as_str()).collect();
-        acc.new_order(&self.cn.to_domain_string().as_str(), sans_.as_slice())
+        acc.new_order(self.cn.to_domain_string().as_str(), sans_.as_slice())
     }
     pub fn get_auth_dns_servers(&self, config: &FaytheConfig) -> Result<HashSet<String>, SpecError> {
         let mut res = HashSet::new();
-        res.insert(self.cn.find_zone(&config)?.auth_dns_server.clone());
+        res.insert(self.cn.find_zone(config)?.auth_dns_server.clone());
         for s in &self.sans {
-            res.insert(s.find_zone(&config)?.auth_dns_server.clone());
+            res.insert(s.find_zone(config)?.auth_dns_server.clone());
         }
         Ok(res)
     }
@@ -175,8 +175,8 @@ pub enum PersistSpec {
 impl Persistable for CertSpec {
     async fn persist(&self, cert: Certificate) -> Result<(), PersistError> {
         match &self.persist_spec {
-            PersistSpec::FILE(spec) => Ok(file::persist(&spec, &cert)?),
-            PersistSpec::VAULT(spec) => Ok(vault::persist(&spec, cert).await?),
+            PersistSpec::FILE(spec) => Ok(file::persist(spec, &cert)?),
+            PersistSpec::VAULT(spec) => Ok(vault::persist(spec, cert).await?),
             //PersistSpec::FILE(_spec) => { unimplemented!() },
             PersistSpec::DONTPERSIST => { Ok(()) }
         }
@@ -198,17 +198,17 @@ pub struct Cert {
 
 impl Cert {
     pub fn parse(pem_bytes: &Vec<u8>) -> Result<Cert, CertState> {
-        if pem_bytes.len() == 0 {
+        if pem_bytes.is_empty() {
             return Err(CertState::Empty)
         }
 
-        match X509::from_pem(&pem_bytes) {
+        match X509::from_pem(pem_bytes) {
             Ok(x509) => {
                 Ok(Cert {
                     cn: Self::get_cn(&x509)?,
                     sans: Self::get_sans(&x509),
-                    valid_from: Self::get_timestamp(&x509.not_before())?,
-                    valid_to: Self::get_timestamp(&x509.not_after())?
+                    valid_from: Self::get_timestamp(x509.not_before())?,
+                    valid_to: Self::get_timestamp(x509.not_after())?
                 })
             },
             Err(e) => {
@@ -247,11 +247,11 @@ impl Cert {
 
     fn get_timestamp(time_ref: &Asn1TimeRef) -> Result<chrono::DateTime<Utc>, TimeError> {
         let epoch = Asn1Time::from_unix(0).expect("Failed to create Asn1Time at unix epoch");
-        let diff = epoch.diff(&time_ref).map_err(TimeError::Diff)?;
+        let diff = epoch.diff(time_ref).map_err(TimeError::Diff)?;
         //let diff = time_ref.diff(&epoch).map_err(TimeError::Diff)?;
         let unix_ts = diff.days as i64 * (24 * 60 * 60) + diff.secs as i64;
         use chrono::offset::LocalResult;
-        match chrono::Utc.timestamp_opt(unix_ts.into(), 0) {
+        match chrono::Utc.timestamp_opt(unix_ts, 0) {
             LocalResult::None => Err(TimeError::UnixTimestampOutOfBounds),
             LocalResult::Single(datetime) => Ok(datetime),
             LocalResult::Ambiguous(_, _) => unreachable!("timestamp_opt never returns LocalResult::Ambigious"),
@@ -317,7 +317,7 @@ pub trait IssueSource {
 
     fn get_computed_cn(&self, config: &FaytheConfig) -> Result<DNSName, SpecError> {
         let cn = DNSName::try_from(&self.get_raw_cn())?;
-        let zone = cn.generic_checks(&config)?;
+        let zone = cn.generic_checks(config)?;
         Ok(match zone.issue_wildcard_certs {
             true => cn.to_wildcard()?,
             false => cn
@@ -328,17 +328,17 @@ pub trait IssueSource {
         let cn = DNSName::try_from(&self.get_raw_cn())?;
 
         let raw_sans = self.get_raw_sans();
-        let zone = cn.generic_checks(&config)?;
-        if zone.issue_wildcard_certs && raw_sans.len() > 0 {
+        let zone = cn.generic_checks(config)?;
+        if zone.issue_wildcard_certs && !raw_sans.is_empty() {
             return Err(SpecError::SansNotSupportedWithAutoWildcardIssuingEnabled)
         }
 
         for s in &raw_sans {
             let s_ = DNSName::try_from(s)?;
-            s_.generic_checks(&config)?;
+            s_.generic_checks(config)?;
             out.insert(s_);
         }
-        out.insert(self.get_computed_cn(&config)?);
+        out.insert(self.get_computed_cn(config)?);
         Ok(out)
     }
 }
@@ -461,7 +461,7 @@ pub mod tests {
     #[test]
     fn test_valid_pem() {
         let bytes = include_bytes!("../test/longlived.pem");
-        let cert = Cert::parse(&bytes.to_vec()).unwrap();
+        let cert = Cert::parse(bytes.as_ref()).unwrap();
 
         let cn = "cn.longlived";
         let sans = set![cn, "san1.longlived", "san2.longlived"];
@@ -486,7 +486,7 @@ pub mod tests {
     #[test]
     fn test_cn_mismatch() {
         let bytes = include_bytes!("../test/longlived.pem");
-        let cert = Cert::parse(&bytes.to_vec()).unwrap();
+        let cert = Cert::parse(bytes.as_ref()).unwrap();
 
         let cn = "cn.shortlived";
         let sans = set!["san1.longlived", "san2.longlived"];
@@ -508,7 +508,7 @@ pub mod tests {
     #[test]
     fn test_sans_mismatch() {
         let bytes = include_bytes!("../test/longlived.pem");
-        let cert = Cert::parse(&bytes.to_vec()).unwrap();
+        let cert = Cert::parse(bytes.as_ref()).unwrap();
 
         /*
             Not Before: Dec  1 11:42:07 2020 GMT
@@ -553,7 +553,7 @@ pub mod tests {
     #[test]
     fn test_expired_pem() {
         let bytes = include_bytes!("../test/expired.pem");
-        let cert = Cert::parse(&bytes.to_vec()).unwrap();
+        let cert = Cert::parse(bytes.as_ref()).unwrap();
 
         let cn = "cn.expired";
         let sans = set![cn, "san1.expired", "san2.expired"];
@@ -625,7 +625,7 @@ pub mod tests {
     #[test]
     fn test_wildcard_san_mismatch_regression() {
         let bytes = include_bytes!("../test/wildcard.pem");
-        let cert = Cert::parse(&bytes.to_vec()).unwrap();
+        let cert = Cert::parse(bytes.as_ref()).unwrap();
 
         let cn = "*.unit.test";
         let sans = set![cn];
@@ -637,14 +637,14 @@ pub mod tests {
         let config = &container.faythe_config;
         let spec = create_filespec("foo.unit.test").to_cert_spec(&container).unwrap();
 
-        assert!(cert.state(&config, &spec) == CertState::Valid);
-        assert!(cert.is_valid(&config, &spec));
+        assert!(cert.state(config, &spec) == CertState::Valid);
+        assert!(cert.is_valid(config, &spec));
 
         let container = create_test_file_config(true);
         let config = &container.faythe_config;
         let spec = create_filespec("foo.unit.test").to_cert_spec(&container).unwrap();
 
-        assert!(cert.state(&config, &spec) == CertState::Valid);
-        assert!(cert.is_valid(&config, &spec));
+        assert!(cert.state(config, &spec) == CertState::Valid);
+        assert!(cert.is_valid(config, &spec));
     }
 }

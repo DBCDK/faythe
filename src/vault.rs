@@ -111,7 +111,7 @@ pub async fn list(config: &VaultMonitorConfig) -> Result<HashMap<CertName, Vault
 
     let mut certs: HashMap<CertName, VaultCert> = HashMap::new();
     for s in &config.specs {
-        let vault_paths = default_key_names(&config, s);
+        let vault_paths = default_key_names(config, s);
         let cert_raw: Result<VaultData, _> =
             kv2::read(&*client, &config.kv_mount, &vault_paths.cert).await;
 
@@ -144,9 +144,8 @@ pub async fn list(config: &VaultMonitorConfig) -> Result<HashMap<CertName, Vault
 }
 
 fn read_to_string(path: &Path) -> Result<String, std::io::Error> {
-    std::fs::read_to_string(path).map_err(|e| {
-        log::error(&format!("failed to read file: {:?}", &path), &e);
-        e
+    std::fs::read_to_string(path).inspect_err(|e| {
+        log::error(&format!("failed to read file: {:?}", &path), e);
     })
 }
 
@@ -224,8 +223,8 @@ pub async fn login(
     secret_id_path: &Path,
     vault_addr: &Url,
 ) -> Result<VaultClient, VaultError> {
-    let role_id = read_to_string(&role_id_path)?;
-    let secret_id = read_to_string(&secret_id_path)?;
+    let role_id = read_to_string(role_id_path)?;
+    let secret_id = read_to_string(secret_id_path)?;
     let role_id = role_id.trim();
     let secret_id = secret_id.trim();
 
@@ -267,7 +266,7 @@ pub async fn persist(persist_spec: &VaultPersistSpec, cert: Certificate) -> Resu
         &*client,
         &persist_spec.kv_mount,
         &persist_spec.paths.cert,
-        &kv_data(std::str::from_utf8(&cert.certificate().as_bytes())
+        &kv_data(std::str::from_utf8(cert.certificate().as_bytes())
         .map_err(|e| PersistError::Vault(e.into()))?.to_string()),
     )
     .await.map_err(|e| PersistError::Vault(e.into()))?;
@@ -276,7 +275,7 @@ pub async fn persist(persist_spec: &VaultPersistSpec, cert: Certificate) -> Resu
         &*client,
         &persist_spec.kv_mount,
         &persist_spec.paths.key,
-        &kv_data(std::str::from_utf8(&cert.private_key().as_bytes())
+        &kv_data(std::str::from_utf8(cert.private_key().as_bytes())
         .map_err(|e| PersistError::Vault(e.into()))?.to_string()),
     )
     .await.map_err(|e| PersistError::Vault(e.into()))?;
@@ -294,7 +293,7 @@ impl IssueSource for VaultSpec {
 
 impl VaultMonitorConfig {
     pub fn to_persist_spec(&self, cert_spec: &VaultSpec) -> VaultPersistSpec {
-        let names = default_key_names(&self, &cert_spec);
+        let names = default_key_names(self, cert_spec);
 
         VaultPersistSpec {
             role_id_path: self.role_id_path.clone(),
@@ -364,7 +363,7 @@ impl VaultData {
 impl VaultSpec {
     async fn write_meta_file(&self, config: &ConfigContainer) -> Result<(), TouchError> {
         let monitor_config = config.get_vault_monitor_config()?;
-        let persist_spec = monitor_config.to_persist_spec(&self);
+        let persist_spec = monitor_config.to_persist_spec(self);
 
         let client = authenticate(
             &persist_spec.role_id_path,
@@ -399,7 +398,7 @@ impl CertSpecable for VaultSpec {
             name: self.name.clone(),
             cn,
             sans: self.get_computed_sans(&config.faythe_config)?,
-            persist_spec: PersistSpec::VAULT(monitor_config.to_persist_spec(&self)),
+            persist_spec: PersistSpec::VAULT(monitor_config.to_persist_spec(self)),
         })
     }
     // Write meta file, meta file just contains a rfc3339 timestamp
@@ -414,7 +413,7 @@ impl CertSpecable for VaultSpec {
     async fn should_retry(&self, config: &ConfigContainer) -> bool {
         let check_meta: Result<(),VaultError> = async {
             let monitor_config = config.get_vault_monitor_config()?;
-            let persist_spec = monitor_config.to_persist_spec(&self);
+            let persist_spec = monitor_config.to_persist_spec(self);
             let client = authenticate(
                 &persist_spec.role_id_path,
                 &persist_spec.secret_id_path,
@@ -424,7 +423,7 @@ impl CertSpecable for VaultSpec {
             let raw_read: Result<VaultData, ClientError> = kv2::read(&*client, &persist_spec.kv_mount, &persist_spec.paths.meta).await;
             match raw_read {
                 Ok(value) => {
-                    let time_stamp = chrono::DateTime::parse_from_rfc3339(&value.borrow())?;
+                    let time_stamp = chrono::DateTime::parse_from_rfc3339(value.borrow())?;
                     let diff = chrono::Utc::now().signed_duration_since(time_stamp);
                     match diff
                         > chrono::Duration::milliseconds(
