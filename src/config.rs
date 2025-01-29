@@ -27,22 +27,9 @@ pub struct FaytheConfig {
     #[serde(default = "default_issue_grace")]
     pub issue_grace: u64,
     #[serde(default)]
-    pub kube_monitor_configs: Vec<KubeMonitorConfig>,
-    #[serde(default)]
     pub file_monitor_configs: Vec<FileMonitorConfig>,
     #[serde(default)]
     pub vault_monitor_configs: Vec<VaultMonitorConfig>,
-}
-
-#[derive(Clone, Deserialize, Debug)]
-#[serde(deny_unknown_fields)]
-pub struct KubeMonitorConfig {
-    pub secret_namespace: String,
-    pub secret_hostlabel: String,
-    #[serde(default = "default_wildcard_cert_k8s_prefix")]
-    pub wildcard_cert_prefix: String,
-    #[serde(default = "default_k8s_touch_annotation")]
-    pub touch_annotation: Option<String>,
 }
 
 #[derive(Clone, Deserialize, Serialize, Debug)]
@@ -78,7 +65,6 @@ pub struct FileMonitorConfig {
 }
 
 pub enum MonitorConfig {
-    Kube(KubeMonitorConfig),
     File(FileMonitorConfig),
     Vault(VaultMonitorConfig),
 }
@@ -128,12 +114,6 @@ fn default_timeout_secs() -> u8 {
 }
 
 impl ConfigContainer {
-    pub fn get_kube_monitor_config(&self) -> Result<&KubeMonitorConfig, SpecError> {
-        Ok(match &self.monitor_config {
-            MonitorConfig::Kube(c) => Ok(c),
-            _ => Err(SpecError::InvalidConfig)
-        }?)
-    }
     pub fn get_file_monitor_config(&self) -> Result<&FileMonitorConfig, SpecError> {
         Ok(match &self.monitor_config {
             MonitorConfig::File(c) => Ok(c),

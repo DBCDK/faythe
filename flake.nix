@@ -74,7 +74,6 @@
         rustc
         zlib.dev
         dnsutils # runtime
-        kubectl # runtime
       ];
     };
   };

@@ -2,7 +2,6 @@ use std::time::Duration;
 
 use crate::config::ConfigContainer;
 use crate::file;
-use crate::kube;
 use crate::log;
 
 use tokio::sync::mpsc::Sender;
@@ -17,24 +16,6 @@ use crate::metrics;
 use crate::metrics::MetricsType;
 #[cfg(test)]
 use chrono::Utc;
-
-pub async fn monitor_k8s(config: ConfigContainer, tx: Sender<CertSpec>) {
-    log::info("k8s monitoring-started");
-    let monitor_config = config.get_kube_monitor_config().unwrap();
-    loop {
-        let ingresses = kube::get_ingresses(&monitor_config);
-        let secrets = kube::get_secrets(&monitor_config);
-        match try_join!(ingresses, secrets) {
-            Ok((ingresses, secrets)) => {
-                inspect(&config, &tx, &ingresses, secrets).await;
-            }
-            Err(e) => {
-                log::error("monitor: failed to get k8s objects, bailing out.", &e);
-            }
-        }
-        tokio::time::sleep(Duration::from_millis(config.faythe_config.monitor_interval)).await;
-    }
-}
 
 pub async fn monitor_files(config: ConfigContainer, tx: Sender<CertSpec>) {
     log::info("file monitoring-started");
@@ -131,39 +112,38 @@ mod tests {
     use super::*;
     use crate::common::tests::*;
     use crate::common::{Cert, DNSName};
-    use crate::kube::{Ingress, Secret};
     use crate::mpsc;
     use crate::mpsc::{Receiver, Sender};
     use std::collections::HashSet;
+    use file::{FileCert, FileSpec};
     use tokio::runtime::Runtime;
 
     fn create_channel() -> (Sender<CertSpec>, Receiver<CertSpec>) {
         mpsc::channel(100)
     }
 
-    fn create_ingress(host: &String) -> Vec<Ingress> {
-        [Ingress {
-            name: "test".to_string(),
-            namespace: "test".to_string(),
-            touched: chrono::DateTime::<Utc>::MIN_UTC,
-            hosts: [host.clone()].to_vec(),
+    fn create_filespec(host: &str) -> Vec<FileSpec> {
+        [FileSpec{
+            name: host.to_string(),
+            cn: host.to_string(),
+            sans: HashSet::new(),
+            sub_directory: None,
+            cert_file_name: None,
+            key_file_name: None,
         }]
         .to_vec()
     }
 
-    fn create_secret(host: &String, valid_days: i64) -> Secret {
+    fn create_filecert(host: &String, valid_days: i64) -> FileCert {
         let mut sans = HashSet::new();
         sans.insert(host.clone());
-        Secret {
-            name: String::from("test"),
-            namespace: String::from("test"),
+        FileCert {
             cert: Cert {
                 cn: host.clone(),
                 sans,
                 valid_from: Utc::now(),
                 valid_to: Utc::now() + chrono::Duration::days(valid_days),
-            },
-            key: vec![],
+            }
         }
     }
 
@@ -172,11 +152,11 @@ mod tests {
         let rt = Runtime::new().unwrap();
         let host = String::from("host1.subdivision.unit.test");
 
-        let config = create_test_kubernetes_config(false);
+        let config = create_test_file_config(false);
         let (tx, mut rx) = create_channel();
-        let ingresses = create_ingress(&host);
-        let secrets: HashMap<String, kube::Secret> = HashMap::new();
-        rt.block_on(inspect(&config, &tx, &ingresses, secrets));
+        let filespecs = create_filespec(&host);
+        let certs: HashMap<String, FileCert> = HashMap::new();
+        rt.block_on(inspect(&config, &tx, &filespecs, certs));
 
         let spec = rt.block_on(rx.recv()).unwrap();
         assert_eq!(spec.cn.to_domain_string(), host);
@@ -185,44 +165,20 @@ mod tests {
     #[test]
     fn test_wildcard_new_issue() {
         let rt = Runtime::new().unwrap();
-        let host = String::from("host1.subdivision.unit.test");
-        let name = String::from("wild---card.subdivision.unit.test");
+        let host = String::from("will-be-substituted-with-wildcard.subdivision.unit.test");
 
-        let config = create_test_kubernetes_config(true);
+        let config = create_test_file_config(true);
         let (tx, mut rx) = create_channel();
-        let ingresses = create_ingress(&host);
-        let secrets: HashMap<String, kube::Secret> = HashMap::new();
-        rt.block_on(inspect(&config, &tx, &ingresses, secrets));
+        let filespecs = create_filespec(&host);
+        let certs: HashMap<String, FileCert> = HashMap::new();
+        rt.block_on(inspect(&config, &tx, &filespecs, certs));
 
         let spec = rt.block_on(rx.recv()).unwrap();
-        assert_eq!(spec.name, name);
+        assert_eq!(spec.name, host);
         assert_eq!(
             spec.cn.to_domain_string(),
             String::from("*.subdivision.unit.test")
         );
-    }
-
-    // See note below for reason for test disablement
-    //#[test]
-    fn test_wildcard_host_in_ingress() {
-        let rt = Runtime::new().unwrap();
-        let host = String::from("*.subdivision.unit.test");
-
-        let config = create_test_kubernetes_config(false);
-        let (tx, mut rx) = create_channel();
-        let ingresses = create_ingress(&host);
-        let secrets: HashMap<String, kube::Secret> = HashMap::new();
-
-        // Prior to the async version, when this was threaded, this test
-        // appeared to succeed simply because of a race condition here: This
-        // thread would be too fast and conclude that the channel was empty
-        // because the inspect thread had not progressed enough yet. A simple
-        // sleep would have exposed this problem as well, but try_recv really is
-        // race-unsafe in both cases because "empty, so far" and "error, will
-        // continue being empty" are not distinguishable from one another.
-        rt.block_on(inspect(&config, &tx, &ingresses, secrets));
-
-        assert!(rx.try_recv().is_err()); // it is not allowed to ask for a wildcard cert in k8s ingress specs
     }
 
     #[test]
@@ -230,13 +186,15 @@ mod tests {
         let rt = Runtime::new().unwrap();
         let host = String::from("host1.subdivision.unit.wrongtest");
 
-        let config = create_test_kubernetes_config(false);
+        let config = create_test_file_config(false);
         let (tx, mut rx) = create_channel();
-        let ingresses = create_ingress(&host);
-        let secrets: HashMap<String, kube::Secret> = HashMap::new();
-        rt.block_on(inspect(&config, &tx, &ingresses, secrets));
+        let filespecs = create_filespec(&host);
+        let certs: HashMap<String, FileCert> = HashMap::new();
+        rt.block_on(inspect(&config, &tx, &filespecs, certs));
 
-        assert!(rx.try_recv().is_err()); // faythe must know an authoritative ns server for the domain in question
+        // This is fragile and racy, we're signalling NonAuthorativeDomain by
+        // _not_ getting a spec back here
+        assert!(rx.try_recv().is_err());
     }
 
     #[test]
@@ -244,13 +202,13 @@ mod tests {
         let rt = Runtime::new().unwrap();
         let host = String::from("renewal1.subdivision.unit.test");
 
-        let config = create_test_kubernetes_config(false);
+        let config = create_test_file_config(false);
         let (tx, mut rx) = create_channel();
-        let ingresses = create_ingress(&host);
-        let mut secrets: HashMap<String, kube::Secret> = HashMap::new();
-        secrets.insert(host.clone(), create_secret(&host, 20));
+        let filespecs = create_filespec(&host);
+        let mut certs: HashMap<String, FileCert> = HashMap::new();
+        certs.insert(host.clone(), create_filecert(&host, 20));
 
-        rt.block_on(inspect(&config, &tx, &ingresses, secrets));
+        rt.block_on(inspect(&config, &tx, &filespecs, certs));
 
         let spec = rx.try_recv().unwrap();
         assert_eq!(spec.cn.to_domain_string(), host);
@@ -262,37 +220,38 @@ mod tests {
         let host = String::from("renewal2.subdivision.unit.test");
         let name = host.clone();
 
-        let config = create_test_kubernetes_config(false);
+        let config = create_test_file_config(false);
         let (tx, mut rx) = create_channel();
-        let ingresses = create_ingress(&host);
-        let mut secrets: HashMap<String, kube::Secret> = HashMap::new();
-        secrets.insert(name, create_secret(&host, 40));
+        let filespecs = create_filespec(&host);
+        let mut certs: HashMap<String, FileCert> = HashMap::new();
+        certs.insert(host.clone(), create_filecert(&host, 40));
 
-        rt.block_on(inspect(&config, &tx, &ingresses, secrets));
+        rt.block_on(inspect(&config, &tx, &filespecs, certs));
 
+        // This is fragile and racy, we're signalling issuance not happening by
+        // _not_ getting a spec back here
         assert!(rx.try_recv().is_err()); // there should be nothing to issue
     }
 
     #[test]
     fn test_wildcard_not_yet_time_for_renewal() {
-        use std::convert::TryFrom;
-
         let rt = Runtime::new().unwrap();
 
-        let host = DNSName::try_from(&String::from("renewal2.subdivision.unit.test")).unwrap();
-        let name = String::from("wild---card.subdivision.unit.test");
+        let host = String::from("*.subdivision.unit.test");
 
-        let config = create_test_kubernetes_config(true);
+        let config = create_test_file_config(false);
         let (tx, mut rx) = create_channel();
-        let ingresses = create_ingress(&host.to_domain_string());
-        let mut secrets: HashMap<String, kube::Secret> = HashMap::new();
-        secrets.insert(
-            name,
-            create_secret(&host.to_wildcard().unwrap().to_domain_string(), 40),
+        let filespecs = create_filespec(&host);
+        let mut certs: HashMap<String, FileCert> = HashMap::new();
+        certs.insert(
+            host.clone(),
+            create_filecert(&host, 40),
         );
 
-        rt.block_on(inspect(&config, &tx, &ingresses, secrets));
+        rt.block_on(inspect(&config, &tx, &filespecs, certs));
 
+        // This is fragile and racy, we're signalling issuance not happening by
+        // _not_ getting a spec back here
         assert!(rx.try_recv().is_err()); // there should be nothing to issue
     }
 }
