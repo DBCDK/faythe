@@ -5,7 +5,6 @@ use crate::file;
 use crate::log;
 
 use tokio::sync::mpsc::Sender;
-use tokio::try_join;
 
 use crate::common::{CertName, CertSpec};
 use crate::common::{CertSpecable, ValidityVerifier};
@@ -21,7 +20,7 @@ pub async fn monitor_files(config: ConfigContainer, tx: Sender<CertSpec>) {
     log::info("file monitoring-started");
     let monitor_config = config.get_file_monitor_config().unwrap();
     loop {
-        let certs = file::read_certs(&monitor_config);
+        let certs = file::read_certs(monitor_config);
         match certs {
             Ok(certs) => {
                 inspect(&config, &tx, &monitor_config.specs, certs).await;
@@ -47,7 +46,7 @@ pub async fn monitor_vault(config: ConfigContainer, tx: Sender<CertSpec>) {
             .unwrap();
     // enter monitor loop
     loop {
-        match crate::vault::list(&monitor_config).await {
+        match crate::vault::list(monitor_config).await {
             Ok(certs) => {
                 inspect(&config, &tx, &monitor_config.specs, certs).await;
             }
@@ -70,20 +69,20 @@ async fn inspect<CS, VV>(
 {
     let faythe_config = &config.faythe_config;
     for o in objects {
-        let spec = o.to_cert_spec(&config);
+        let spec = o.to_cert_spec(config);
         match &spec {
-            s if s.is_ok() && o.should_retry(&config).await => {
+            s if s.is_ok() && o.should_retry(config).await => {
                 let spec = s.as_ref().unwrap();
 
                 let should_issue = match certs.get(&spec.name) {
-                    Some(cert) => !cert.is_valid(&faythe_config, &spec),
+                    Some(cert) => !cert.is_valid(faythe_config, spec),
                     None => {
                         log::data("no matching cert found for, first-time issue", &spec.name);
                         true
                     }
                 };
 
-                match o.touch(&config).await {
+                match o.touch(config).await {
                     Ok(_) => {
                         log::data("touched", &spec.name); //TODO: improve logging
                         if should_issue {
@@ -111,7 +110,7 @@ mod tests {
     // Note this useful idiom: importing names from outer (for mod tests) scope.
     use super::*;
     use crate::common::tests::*;
-    use crate::common::{Cert, DNSName};
+    use crate::common::Cert;
     use crate::mpsc;
     use crate::mpsc::{Receiver, Sender};
     use std::collections::HashSet;

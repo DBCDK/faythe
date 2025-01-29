@@ -67,14 +67,14 @@ pub async fn serve(port: u16) {
                         successes.render_and_append_instance(
                             &PrometheusInstance::new()
                                 .with_label("cert", event.cert_name.as_str())
-                                .with_value(count.clone()),
+                                .with_value(*count),
                         );
                     }
                     MetricsType::Failure => {
                         failures.render_and_append_instance(
                             &PrometheusInstance::new()
                                 .with_label("cert", event.cert_name.as_str())
-                                .with_value(count.clone()),
+                                .with_value(*count),
                         );
                     }
                 }

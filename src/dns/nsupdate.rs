@@ -7,12 +7,12 @@ use crate::config::NSUpdateDriver;
 
 impl ChallengeDriver for NSUpdateDriver {
     fn add(&self, challenge_host: &String, proof: &String) -> Result<(), DNSError> {
-        let command = self.add_cmd(&challenge_host, &proof);
+        let command = self.add_cmd(challenge_host, proof);
         self.update_dns(&command)
     }
 
     fn delete(&self, challenge_host: &String) -> Result<(), DNSError> {
-        let command = self.delete_cmd(&challenge_host);
+        let command = self.delete_cmd(challenge_host);
         self.update_dns(&command)
     }
 }
@@ -81,7 +81,7 @@ mod tests {
             key: String::from("key")
         };
 
-        let host = challenge_host(&spec.cn, Some(&zone));
+        let host = challenge_host(&spec.cn, Some(zone));
         assert_eq!(driver.add_cmd(&host, &proof),
                    "server ns.unit.test\nupdate add _acme-challenge.moo.unit.test. 120 TXT \"abcdef1234\"\nsend\n")
     }
@@ -97,7 +97,7 @@ mod tests {
             key: String::from("key")
         };
 
-        let host = challenge_host(&spec.cn, Some(&zone));
+        let host = challenge_host(&spec.cn, Some(zone));
         assert_eq!(driver.add_cmd(&host, &proof),
                    "server ns.unit.test\nupdate add _acme-challenge.unit.test. 120 TXT \"abcdef1234\"\nsend\n")
     }
@@ -112,7 +112,7 @@ mod tests {
             key: String::from("key")
         };
 
-        let host = challenge_host(&spec.cn, Some(&zone));
+        let host = challenge_host(&spec.cn, Some(zone));
         assert_eq!(driver.delete_cmd(&host),
                    "server ns.unit.test\nupdate delete _acme-challenge.moo.unit.test. TXT\nsend\n")
     }
@@ -127,7 +127,7 @@ mod tests {
             key: String::from("key")
         };
 
-        let host = challenge_host(&spec.cn, Some(&zone));
+        let host = challenge_host(&spec.cn, Some(zone));
         assert_eq!(driver.delete_cmd(&host),
                    "server ns.unit.test\nupdate delete _acme-challenge.unit.test. TXT\nsend\n")
     }
@@ -143,7 +143,7 @@ mod tests {
             key: String::from("key")
         };
 
-        let host = challenge_host(&spec.cn, Some(&zone));
+        let host = challenge_host(&spec.cn, Some(zone));
         assert_eq!(driver.add_cmd(&host, &proof),
                    "server ns.suffixed.unit.test\nupdate add _acme-challenge.suffixed.unit.test.acme.example.com. 120 TXT \"abcdef1234\"\nsend\n");
 

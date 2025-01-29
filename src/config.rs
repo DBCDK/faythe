@@ -115,16 +115,16 @@ fn default_timeout_secs() -> u8 {
 
 impl ConfigContainer {
     pub fn get_file_monitor_config(&self) -> Result<&FileMonitorConfig, SpecError> {
-        Ok(match &self.monitor_config {
+        match &self.monitor_config {
             MonitorConfig::File(c) => Ok(c),
             _ => Err(SpecError::InvalidConfig),
-        }?)
+        }
     }
     pub fn get_vault_monitor_config(&self) -> Result<&VaultMonitorConfig, SpecError> {
-        Ok(match &self.monitor_config {
+        match &self.monitor_config {
             MonitorConfig::Vault(c) => Ok(c),
             _ => Err(SpecError::InvalidConfig),
-        }?)
+        }
     }
 }
 

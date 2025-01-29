@@ -20,9 +20,9 @@ pub fn read_certs(config: &FileMonitorConfig) -> Result<HashMap<CertName, FileCe
     let mut certs = HashMap::new();
     let mut wanted_files = HashSet::new();
     for s in &config.specs {
-        let names = default_file_names(&s);
-        names.insert_into(&config, &mut wanted_files);
-        let raw = read_file(absolute_file_path(&config, &names, &names.cert).as_path()).unwrap_or(vec![]);
+        let names = default_file_names(s);
+        names.insert_into(config, &mut wanted_files);
+        let raw = read_file(absolute_file_path(config, &names, &names.cert).as_path()).unwrap_or_default();
         let cert = Cert::parse(&raw);
         if cert.is_ok() {
             certs.insert(s.name.clone(), FileCert{
@@ -33,7 +33,7 @@ pub fn read_certs(config: &FileMonitorConfig) -> Result<HashMap<CertName, FileCe
         }
     }
     if config.prune {
-        prune(&config, &wanted_files);
+        prune(config, &wanted_files);
     }
     Ok(certs)
 }
@@ -46,7 +46,7 @@ fn prune(config: &FileMonitorConfig, wanted_files: &HashSet<PathBuf>) {
 
     for f in unwanted {
         let path = f.path();
-        match fs::remove_file(&path) {
+        match fs::remove_file(path) {
             Ok(_) => log::data("Pruned file", &path),
             Err(e) => log::error(&format!("failed to prune file: {}", &path.display()), &e)
         }
@@ -54,7 +54,7 @@ fn prune(config: &FileMonitorConfig, wanted_files: &HashSet<PathBuf>) {
 
     // unwanted files are removed ^ , now: remove empty directories
 
-    let me = absolute_dir_path(&config, Some(&config.directory));
+    let me = absolute_dir_path(config, Some(&config.directory));
     let dirs = WalkDir::new(&config.directory)
         .into_iter()
         .filter_map(|e| e.ok())
@@ -63,7 +63,7 @@ fn prune(config: &FileMonitorConfig, wanted_files: &HashSet<PathBuf>) {
     for d in dirs {
         let path = d.path();
         if path.read_dir().unwrap().next().is_none() {
-            match fs::remove_dir(&path) {
+            match fs::remove_dir(path) {
                 Ok(_) => log::data("Removed directory", &path),
                 Err(e) => log::error(&format!("failed to remove directory: {}", &path.display()), &e)
             }
@@ -74,7 +74,7 @@ fn prune(config: &FileMonitorConfig, wanted_files: &HashSet<PathBuf>) {
 fn default_file_names(spec: &FileSpec) -> FileNames {
     let sub_directory = match &spec.sub_directory {
         Some(n) => Some(n.clone()),
-        None => Some(format!("{name}",name=spec.name))
+        None => Some(spec.name.to_string())
     };
     let cert = match &spec.cert_file_name {
         Some(n) => Some(n.clone()),
@@ -139,27 +139,27 @@ impl CertSpecable for FileSpec {
     fn to_cert_spec(&self, config: &ConfigContainer) -> Result<CertSpec, SpecError> {
         let cn = self.get_computed_cn(&config.faythe_config)?;
         let monitor_config = config.get_file_monitor_config()?;
-        let names = default_file_names(&self);
+        let names = default_file_names(self);
         Ok(CertSpec{
             name: self.name.clone(),
             cn,
             sans: self.get_computed_sans(&config.faythe_config)?,
             persist_spec: PersistSpec::FILE(FilePersistSpec{
-                private_key_path: absolute_file_path(&monitor_config, &names, &names.key),
-                public_key_path: absolute_file_path(&monitor_config, &names, &names.cert),
+                private_key_path: absolute_file_path(monitor_config, &names, &names.key),
+                public_key_path: absolute_file_path(monitor_config, &names, &names.cert),
             }),
         })
     }
 
     async fn touch(&self, config: &ConfigContainer) -> Result<(), TouchError> {
         let monitor_config = config.get_file_monitor_config()?;
-        let names = default_file_names(&self);
-        let sub_dir = absolute_dir_path(&monitor_config, names.sub_directory.as_ref());
+        let names = default_file_names(self);
+        let sub_dir = absolute_dir_path(monitor_config, names.sub_directory.as_ref());
         if names.sub_directory.is_some() && !sub_dir.exists() {
             fs::create_dir(&sub_dir)?;
             sub_dir.metadata()?.permissions().set_mode(0o655) // rw-r-xr-x
         }
-        let file_path = absolute_file_path(&monitor_config, &names, &names.meta);
+        let file_path = absolute_file_path(monitor_config, &names, &names.meta);
         let mut _file = OpenOptions::new().truncate(true).write(true).create(true).open(file_path)?;
         Ok(())
     }
@@ -169,12 +169,12 @@ impl CertSpecable for FileSpec {
 
         match || -> Result<(), TouchError> {
             let monitor_config = config.get_file_monitor_config()?;
-            let names = default_file_names(&self);
-            let file = File::open(absolute_file_path(&monitor_config, &names, &names.meta))?;
+            let names = default_file_names(self);
+            let file = File::open(absolute_file_path(monitor_config, &names, &names.meta))?;
             let metadata = file.metadata()?;
             let modified = metadata.modified()?;
             let diff: Duration = SystemTime::now().duration_since(modified)?;
-            match diff > Duration::from_millis(config.faythe_config.issue_grace as u64) {
+            match diff > Duration::from_millis(config.faythe_config.issue_grace) {
                 true => Ok(()),
                 false => Err(TouchError::RecentlyTouched)
             }
@@ -187,13 +187,13 @@ impl CertSpecable for FileSpec {
 
 fn absolute_dir_path(config: &FileMonitorConfig, dir: Option<&String>) -> PathBuf {
     match dir {
-        Some(dir) => Path::new(&config.directory).join(&dir),
+        Some(dir) => Path::new(&config.directory).join(dir),
         None => Path::new(&config.directory).to_path_buf()
     }
 }
 
 fn absolute_file_path(config: &FileMonitorConfig, names: &FileNames, file: &String) -> PathBuf {
-    absolute_dir_path(&config, names.sub_directory.as_ref()).join(&file)
+    absolute_dir_path(config, names.sub_directory.as_ref()).join(file)
 }
 
 #[derive(Clone, Debug)]
@@ -206,9 +206,9 @@ struct FileNames {
 
 impl FileNames {
     fn insert_into(&self, config: &FileMonitorConfig, set: &mut HashSet<PathBuf>) {
-        set.insert(absolute_file_path(&config, &self, &self.cert));
-        set.insert(absolute_file_path(&config, &self, &self.key));
-        set.insert(absolute_file_path(&config, &self, &self.meta));
+        set.insert(absolute_file_path(config, self, &self.cert));
+        set.insert(absolute_file_path(config, self, &self.key));
+        set.insert(absolute_file_path(config, self, &self.meta));
     }
 }
 
@@ -227,7 +227,7 @@ pub fn persist(spec: &FilePersistSpec, cert: &Certificate) -> Result<(), Persist
     let mut priv_permissions = priv_file.metadata()?.permissions();
     priv_permissions.set_mode(0o640); // rw-r------
     match spec.public_key_path.parent() {
-        Some(d) => chgrp("certpull", &d), //TODO: don't hardcode group
+        Some(d) => chgrp("certpull", d), //TODO: don't hardcode group
         None => Err(PersistError::File(FileError::IO))
     }?;
     Ok(())

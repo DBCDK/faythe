@@ -121,11 +121,11 @@ async fn validate_challenge(order: &IssueOrder) -> Result<(), IssuerError> {
 
             log::data("Validating auth_dns_servers internally", &log_data);
             for d in &order.auth_dns_servers {
-                dns::query(resolvers.get(&d).unwrap(), &domain, &proof).await?;
+                dns::query(resolvers.get(d).unwrap(), &domain, &proof).await?;
             }
             log::data("Validating val_dns_servers internally", &log_data);
             for d in &order.val_dns_servers {
-                dns::query(resolvers.get(&d).unwrap(), &domain, &proof).await?;
+                dns::query(resolvers.get(d).unwrap(), &domain, &proof).await?;
             }
         }
         log::data("Asking LE to validate", &log_data);
@@ -139,7 +139,7 @@ fn setup_challenge(config: &FaytheConfig, spec: &CertSpec) -> Result<IssueOrder,
     // start by deleting any existing challenges here,
     // because we don't want to bother Let's encrypt and their rate limits,
     // in case we have trouble communicating with the NS-server or similar.
-    dns::delete(&config, &spec)?;
+    dns::delete(config, spec)?;
 
     let persist = MemoryPersist::new();
     let url = DirectoryUrl::Other(&config.lets_encrypt_url);
@@ -159,11 +159,11 @@ fn setup_challenge(config: &FaytheConfig, spec: &CertSpec) -> Result<IssueOrder,
         if a.need_challenge() {
             let challenge = a.dns_challenge();
             let domain = DNSName::try_from(&String::from(a.domain_name()))?;
-            dns::add(&config, &domain, &challenge.dns_proof())?;
+            dns::add(config, &domain, &challenge.dns_proof())?;
         }
     }
 
-    let auth_dns_servers = spec.get_auth_dns_servers(&config)?;
+    let auth_dns_servers = spec.get_auth_dns_servers(config)?;
     let mut val_dns_servers = HashSet::new();
     for s in &config.val_dns_servers {
         val_dns_servers.insert(s.to_owned());
@@ -274,10 +274,10 @@ async fn init_resolvers<'l>(config: &FaytheConfig) -> Result<HashMap<String, Tok
 
     for z in &config.zones {
         let server = &z.1.auth_dns_server;
-        resolvers.insert(server.clone(), create_resolvers(&server).await?);
+        resolvers.insert(server.clone(), create_resolvers(server).await?);
     }
     for s in &config.val_dns_servers {
-        resolvers.insert(s.to_string(), create_resolvers(&s).await?);
+        resolvers.insert(s.to_string(), create_resolvers(s).await?);
     }
     Ok(resolvers)
 }

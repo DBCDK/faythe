@@ -36,8 +36,8 @@ pub trait ChallengeDriver {
 }
 
 pub fn add(config: &FaytheConfig, name: &DNSName, proof: &String) -> Result<(), DNSError> {
-    let zone = name.find_zone(&config)?;
-    let challenge_host = challenge_host(name, Some(&zone));
+    let zone = name.find_zone(config)?;
+    let challenge_host = challenge_host(name, Some(zone));
     match &zone.challenge_driver {
         DriverConfig::NSUpdate(nsupdate) => {
             nsupdate.add(&challenge_host, proof)
@@ -50,8 +50,8 @@ pub fn add(config: &FaytheConfig, name: &DNSName, proof: &String) -> Result<(), 
 }
 
 pub fn delete(config: &FaytheConfig, spec: &CertSpec) -> Result<(), DNSError> {
-    let zone = spec.cn.find_zone(&config)?;
-    let host = challenge_host(&spec.cn, Some(&zone));
+    let zone = spec.cn.find_zone(config)?;
+    let host = challenge_host(&spec.cn, Some(zone));
     match &zone.challenge_driver {
         DriverConfig::NSUpdate(nsupdate) => {
             nsupdate.delete(&host)?
@@ -62,8 +62,8 @@ pub fn delete(config: &FaytheConfig, spec: &CertSpec) -> Result<(), DNSError> {
         }
     };
     for s in &spec.sans {
-        let zone = s.find_zone(&config)?;
-        let host = challenge_host(s, Some(&zone));
+        let zone = s.find_zone(config)?;
+        let host = challenge_host(s, Some(zone));
         match &zone.challenge_driver {
             DriverConfig::NSUpdate(nsupdate) => {
                 nsupdate.delete(&host)?
