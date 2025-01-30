@@ -178,7 +178,6 @@ impl Persistable for CertSpec {
         match &self.persist_spec {
             PersistSpec::File(spec) => Ok(file::persist(spec, &cert)?),
             PersistSpec::Vault(spec) => Ok(vault::persist(spec, cert).await?),
-            //PersistSpec::FILE(_spec) => { unimplemented!() },
             PersistSpec::DontPersist => { Ok(()) }
         }
     }
