@@ -107,7 +107,6 @@ async fn inspect<CS, VV>(
 
 #[cfg(test)]
 mod tests {
-    // Note this useful idiom: importing names from outer (for mod tests) scope.
     use super::*;
     use crate::common::tests::*;
     use crate::common::Cert;
