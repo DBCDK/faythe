@@ -284,7 +284,7 @@ async fn init_resolvers<'l>(config: &FaytheConfig) -> Result<HashMap<String, Tok
     Ok(resolvers)
 }
 
-async fn create_resolvers<'a>(server: &'a String) -> Result<TokioAsyncResolver, ResolverError<'a>> {
+async fn create_resolvers(server: &String) -> Result<TokioAsyncResolver, ResolverError> {
 
     let system_resolver = AsyncResolver::tokio_from_system_conf().or(Err(ResolverError::SystemResolveConf))?;
 
