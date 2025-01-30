@@ -163,8 +163,10 @@ pub struct FilePersistSpec {
     pub private_key_path: PathBuf,
     pub public_key_path: PathBuf
 }
-
-#[allow(clippy::large_enum_variant)] // We don't care about the mem use difference here
+// We don't care about the mem use difference here because we're only using VaultPersistSpec in
+// prod, which is the largest variant anyway, so we're always paying the full cost anyway (and
+// saving ~240B per spec doesn't matter in the order of 100s of specs.)
+#[allow(clippy::large_enum_variant)]
 #[derive(Debug, Clone, Serialize)]
 pub enum PersistSpec {
     File(FilePersistSpec),
