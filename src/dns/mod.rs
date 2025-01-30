@@ -36,11 +36,11 @@ pub enum DnsError {
 }
 
 pub trait ChallengeDriver {
-    fn add(&self, challenge_host: &String, proof: &String) -> Result<(), DnsError>;
-    fn delete(&self, challenge_host: &String) -> Result<(), DnsError>;
+    fn add(&self, challenge_host: &str, proof: &str) -> Result<(), DnsError>;
+    fn delete(&self, challenge_host: &str) -> Result<(), DnsError>;
 }
 
-pub fn add(config: &FaytheConfig, name: &DnsName, proof: &String) -> Result<(), DnsError> {
+pub fn add(config: &FaytheConfig, name: &DnsName, proof: &str) -> Result<(), DnsError> {
     let zone = name.find_zone(config)?;
     let challenge_host = challenge_host(name, Some(zone));
     match &zone.challenge_driver {
