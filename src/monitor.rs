@@ -133,12 +133,12 @@ mod tests {
         .to_vec()
     }
 
-    fn create_filecert(host: &String, valid_days: i64) -> FileCert {
+    fn create_filecert(host: &str, valid_days: i64) -> FileCert {
         let mut sans = HashSet::new();
-        sans.insert(host.clone());
+        sans.insert(host.to_owned());
         FileCert {
             cert: Cert {
-                cn: host.clone(),
+                cn: host.to_owned(),
                 sans,
                 valid_from: Utc::now(),
                 valid_to: Utc::now() + chrono::Duration::days(valid_days),

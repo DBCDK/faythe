@@ -6,12 +6,12 @@ use super::ChallengeDriver;
 use crate::config::NSUpdateDriver;
 
 impl ChallengeDriver for NSUpdateDriver {
-    fn add(&self, challenge_host: &String, proof: &String) -> Result<(), DnsError> {
+    fn add(&self, challenge_host: &str, proof: &str) -> Result<(), DnsError> {
         let command = self.add_cmd(challenge_host, proof);
         self.update_dns(&command)
     }
 
-    fn delete(&self, challenge_host: &String) -> Result<(), DnsError> {
+    fn delete(&self, challenge_host: &str) -> Result<(), DnsError> {
         let command = self.delete_cmd(challenge_host);
         self.update_dns(&command)
     }
@@ -31,7 +31,7 @@ impl NSUpdateDriver {
         Ok(child.wait()?)
     }
 
-    fn add_cmd(&self, name: &String, proof: &String) -> String {
+    fn add_cmd(&self, name: &str, proof: &str) -> String {
         format!("server {server}\n\
             update add {host} 120 TXT \"{proof}\"\n\
             send\n",
@@ -40,7 +40,7 @@ impl NSUpdateDriver {
             proof=&proof)
     }
       
-    fn delete_cmd(&self, name: &String) -> String {
+    fn delete_cmd(&self, name: &str) -> String {
         format!("server {server}\n\
             update delete {host} TXT\n\
             send\n",

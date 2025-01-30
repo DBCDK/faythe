@@ -9,18 +9,18 @@ use std::convert::Into;
 use std::time::Duration;
 
 impl ChallengeDriver for WebhookDriver {
-  fn add(&self, challenge_host: &String, proof: &String) -> Result<(), DnsError> {
+  fn add(&self, challenge_host: &str, proof: &str) -> Result<(), DnsError> {
     self.exec_add(Payload {
-      records: vec![(challenge_host.clone(), Record {
+      records: vec![(challenge_host.to_owned(), Record {
         record_type: RecordType::TXT,
-        content: Some(proof.clone()),
+        content: Some(proof.to_owned()),
       })].into_iter().collect()
     })
   }
 
-  fn delete(&self, challenge_host: &String) -> Result<(), DnsError> {
+  fn delete(&self, challenge_host: &str) -> Result<(), DnsError> {
     self.exec_delete(Payload {
-      records: vec![(challenge_host.clone(), Record {
+      records: vec![(challenge_host.to_owned(), Record {
         record_type: RecordType::TXT,
         content: None,
       })].into_iter().collect()
