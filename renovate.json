@@ -6,10 +6,10 @@
       "groupName": "Minor/Patch",
       "matchUpdateTypes":[
         "minor",
-        "patch",
+        "patch"
       ],
       "automerge":true
-    }
+    },
     {
       "groupName": "Pin/Digest/PinDigest/LockFileMaintenance",
       "matchUpdateTypes":[

@@ -86,7 +86,10 @@
         pkg-config
         rustc
         zlib.dev
-        dnsutils # runtime
+        # runtime
+        dnsutils
+        # needed to validdate renovate config
+        renovate
       ];
     };
   };

@@ -1,6 +1,12 @@
 name: "Build"
 on: [ "pull_request" ]
 jobs:
+  validate-renovate:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: cachix/install-nix-action@v27
+    - run: nix shell github:nixos/nixpkgs#renovate --command renovate-config-validator
   tests:
     runs-on: ubuntu-latest
     steps:
