@@ -3,15 +3,22 @@
   "dependencyDashboard": true,
   "packageRules": [
     {
+      "groupName": "Minor/Patch",
       "matchUpdateTypes":[
         "minor",
         "patch",
+      ],
+      "automerge":true
+    }
+    {
+      "groupName": "Pin/Digest/PinDigest/LockFileMaintenance",
+      "matchUpdateTypes":[
         "pin",
         "digest",
         "pinDigest",
         "lockFileMaintenance"
       ],
-      "automerge":true
+      "automerge":false
     }
   ]
 }
