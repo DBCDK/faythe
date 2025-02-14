@@ -14,7 +14,7 @@ acme-lib = { git = 'https://github.com/DBCDK/acme-lib', branch = 'dbc-fork' }
 regex = "1"
 lazy_static = "1"
 walkdir = "2"
-trust-dns-resolver = { version = "0", features = ["tokio-runtime"] }
+trust-dns-resolver = { version = "0.23", features = ["tokio-runtime"] }
 env_logger = "0.11"
 prometheus_exporter_base = { version = "=1.4.0", features = ["hyper_server"] }
 tokio = { version = "1", features = [ "full" ] }
@@ -25,7 +25,7 @@ vaultrs-login = "0.2"
 url = "2"
 chrono = "0.4"
 num-traits = "0.2"
-reqwest = { version = "0", features = ["blocking", "json"] }
+reqwest = { version = "0.12", features = ["blocking", "json"] }
 
 [profile.release]
 panic = "abort"
