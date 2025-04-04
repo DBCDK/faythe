@@ -7,7 +7,7 @@ jobs:
     - uses: actions/checkout@v4
     - uses: cachix/install-nix-action@v30
     - run: nix shell github:nixos/nixpkgs#renovate --command renovate-config-validator
-  clippy:
+  flake-check-clippy:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -15,7 +15,7 @@ jobs:
       with:
         nix_path: nixpkgs=channel:nixos-24.11
     - run: nix build ./#checks.x86_64-linux.clippy
-  sample-configs:
+  flake-check-sample-configs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -23,3 +23,11 @@ jobs:
       with:
         nix_path: nixpkgs=channel:nixos-24.11
     - run: nix build ./#checks.x86_64-linux.sample-configs
+  flake-check-vault:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+    - uses: cachix/install-nix-action@v30
+      with:
+        nix_path: nixpkgs=channel:nixos-24.11
+    - run: nix build ./#checks.x86_64-linux.vault
