@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2018"
 
 [dependencies]
-clap = { version = "=4.5.29", features = ["cargo"] } # We force 4.4 so we don't have to use rustc 1.74
+clap = { version = "=4.5.32", features = ["cargo"] } # We force 4.4 so we don't have to use rustc 1.74
 serde = "1"
 serde_derive = "1"
 serde_json = "1"
