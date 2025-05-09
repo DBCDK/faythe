@@ -42,6 +42,7 @@ in
           networking.dhcpcd.enable = false;
           security.pki.certificateFiles = [ nodes.acme.test-support.acme.caCert ];
           networking.hosts."${nodes.acme.networking.primaryIPAddress}" = [ nodes.acme.test-support.acme.caDomain ];
+          virtualisation.cores = 2;
         };
         nodes = {
           acme =
