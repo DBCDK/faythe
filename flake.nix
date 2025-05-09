@@ -72,6 +72,7 @@
           faythe $DIR/$FILE --config-check >>$out
         done
       '';
+      file = pkgs.callPackage ./nixos/file-test.nix {};
       vault = pkgs.callPackage ./nixos/vault-test.nix {};
       clippy = pkgs."${pname}-clippy";
     };

@@ -72,7 +72,7 @@ in
                   @ IN NS ${ns_host}.
 
                   ${ns_host}. IN A ${nodes.ns.networking.primaryIPAddress}
-                '' + args.extraBindZoneFileLines;
+                '' + (args.extraBindZoneFileLines or "");
               };
 
               networking.firewall.allowedTCPPorts = [ 53 ];
