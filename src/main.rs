@@ -106,6 +106,11 @@ async fn run(config: &FaytheConfig) {
     }
 
     let metrics_port = config.metrics_port;
-    threads.spawn(metrics::serve(metrics_port));
+
+    threads.spawn(async move {
+        if let Err(e) = metrics::serve(metrics_port).await {
+            eprintln!("Metrics server error: {}", e);
+        }
+    });
     threads.join_all().await;
 }

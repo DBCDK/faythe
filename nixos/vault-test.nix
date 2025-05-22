@@ -165,5 +165,10 @@ testLib.mkFaytheTest ({ nodes, ... }: {
         client.fail("""
           journalctl -u faythe | grep -q "dispatch task is gone: runtime dropped the dispatch task"
         """)
+
+    with subtest("Has success metrics"):
+        client.succeed("""
+          curl localhost:9105/metrics | grep -q 'faythe_issue_successes{cert="path1-test"} 1'
+        """)
   '';
 })

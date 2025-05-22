@@ -1,12 +1,17 @@
-use prometheus_exporter_base::prelude::*;
-use prometheus_exporter_base::PrometheusInstance;
-use std::collections::HashMap;
-use std::sync::RwLock;
+use std::net::SocketAddr;
 
+use hyper::body::Incoming;
+use hyper::header::CONTENT_TYPE;
+use hyper::server::conn::http1;
+use hyper::service::service_fn;
+use hyper::Request;
+use hyper::Response;
+use hyper_util::rt::TokioIo;
+use lazy_static::lazy_static;
+use prometheus::{Encoder, TextEncoder, IntCounterVec, register_int_counter_vec};
+use tokio::net::TcpListener;
 
-use crate::log;
-#[derive(Debug, Clone, Default)]
-struct MyOptions {}
+type BoxedErr = Box<dyn std::error::Error + Send + Sync + 'static>;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum MetricsType {
@@ -14,73 +19,54 @@ pub enum MetricsType {
     Failure,
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
-pub struct MetricsEvent {
-    pub cert_name: String,
-    pub event_type: MetricsType,
-}
-
 lazy_static! {
-    static ref EVENTS: RwLock<HashMap<MetricsEvent, u64>> = RwLock::new(HashMap::new());
+    static ref ISSUE_SUCCESS: IntCounterVec = register_int_counter_vec!(
+        "faythe_issue_successes",
+        "Succesfully issued certificates.",
+        &["cert"]
+    )
+    .unwrap();
+    static ref ISSUE_FAILURE: IntCounterVec = register_int_counter_vec!(
+        "faythe_issue_failures",
+        "Failed certificate issue attempts.",
+        &["cert"]
+    )
+    .unwrap();
 }
 
 pub fn new_event(cert_name: &str, event_type: MetricsType) {
-    let event = MetricsEvent {
-        cert_name: cert_name.to_string(),
-        event_type,
-    };
-    let mut guard = EVENTS.write().unwrap();
-    let new_value = match guard.remove(&event) {
-        Some(old_value) => old_value + 1,
-        None => 1,
-    };
-    guard.insert(event, new_value);
+    match event_type {
+        MetricsType::Success => ISSUE_SUCCESS.with_label_values(&[cert_name]).inc(),
+        MetricsType::Failure => ISSUE_FAILURE.with_label_values(&[cert_name]).inc(),
+    }
 }
 
-pub async fn serve(port: u16) {
-    let addr = ServerOptions {
-        addr:   ([0, 0, 0, 0], port).into(),
-        authorization: Authorization::None,
-    };
+async fn serve_req(_req: Request<Incoming>) -> Result<Response<String>, BoxedErr> {
+    let encoder = TextEncoder::new();
 
-    log::info(&format!("starting metrics server on port: {}", port));
+    let metric_families = prometheus::gather();
+    let body = encoder.encode_to_string(&metric_families)?;
 
-    render_prometheus(
-        addr,
-        MyOptions::default(),
-        |_request, _options| async move {
-            let mut successes = PrometheusMetric::build()
-                .with_name("faythe_issue_successes")
-                .with_metric_type(MetricType::Counter)
-                .with_help("Succesfully issued certificates")
-                .build();
+    let response = Response::builder()
+        .status(200)
+        .header(CONTENT_TYPE, encoder.format_type())
+        .body(body)?;
 
-            let mut failures = PrometheusMetric::build()
-                .with_name("faythe_issue_failures")
-                .with_metric_type(MetricType::Counter)
-                .with_help("Failed certificate issue attempts")
-                .build();
+    Ok(response)
+}
 
-            for (event, count) in EVENTS.read().unwrap().iter() {
-                match &event.event_type {
-                    MetricsType::Success => {
-                        successes.render_and_append_instance(
-                            &PrometheusInstance::new()
-                                .with_label("cert", event.cert_name.as_str())
-                                .with_value(*count),
-                        );
-                    }
-                    MetricsType::Failure => {
-                        failures.render_and_append_instance(
-                            &PrometheusInstance::new()
-                                .with_label("cert", event.cert_name.as_str())
-                                .with_value(*count),
-                        );
-                    }
-                }
-            }
-            Ok(format!("{}\n{}", successes.render(), failures.render()))
-        },
-    )
-    .await;
+pub async fn serve(port: u16) -> Result<(), BoxedErr> {
+    let addr: SocketAddr = ([0, 0, 0, 0], port).into();
+    println!("Listening on http://{}", addr);
+    let listener = TcpListener::bind(addr).await?;
+
+    loop {
+        let (stream, _) = listener.accept().await?;
+        let io = TokioIo::new(stream);
+
+        let service = service_fn(serve_req);
+        if let Err(err) = http1::Builder::new().serve_connection(io, service).await {
+            eprintln!("server error: {:?}", err);
+        };
+    }
 }
