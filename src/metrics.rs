@@ -45,10 +45,8 @@ async fn serve_req(req: Request<Incoming>) -> Result<Response<String>, BoxedErr>
     let _whole_body = req.into_body();
     let encoder = TextEncoder::new();
 
-    //let metric_families = prometheus::gather();
-    //let body = encoder.encode_to_string(&metric_families)?;
-    //
-    let body: String = "test".into();
+    let metric_families = prometheus::gather();
+    let body = encoder.encode_to_string(&metric_families)?;
 
     let response = Response::builder()
         .status(200)
