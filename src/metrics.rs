@@ -41,7 +41,8 @@ pub fn new_event(cert_name: &str, event_type: MetricsType) {
     }
 }
 
-async fn serve_req(_req: Request<Incoming>) -> Result<Response<String>, BoxedErr> {
+async fn serve_req(req: Request<Incoming>) -> Result<Response<String>, BoxedErr> {
+    let _whole_body = req.into_body();
     let encoder = TextEncoder::new();
 
     let metric_families = prometheus::gather();
