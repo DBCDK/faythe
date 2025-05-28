@@ -64,9 +64,11 @@ pub async fn serve(port: u16) -> Result<(), BoxedErr> {
         let (stream, _) = listener.accept().await?;
         let io = TokioIo::new(stream);
 
-        let service = service_fn(serve_req);
-        if let Err(err) = http1::Builder::new().serve_connection(io, service).await {
-            eprintln!("server error: {:?}", err);
-        };
+        tokio::task::spawn(async move {
+            let service = service_fn(serve_req);
+            if let Err(err) = http1::Builder::new().serve_connection(io, service).await {
+                eprintln!("server error: {:?}", err);
+            };
+        });
     }
 }
