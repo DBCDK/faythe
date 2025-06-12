@@ -154,10 +154,8 @@ in
         testScript = ''
           start_all()
 
-          ns.wait_for_unit("network-online.target")
-          acme.wait_for_unit("network-online.target")
-          client.wait_for_unit("network-online.target")
-
+          acme.wait_for_unit("pebble.service")
+          client.wait_for_unit("faythe.service")
           ns.wait_for_unit("bind.service")
 
           client.wait_until_succeeds("ping -c1 ${nodes.ns.networking.primaryIPAddress}")
