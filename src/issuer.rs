@@ -271,7 +271,7 @@ impl Resolvers {
     }
 }
 
-async fn init_resolvers<'l>(config: &FaytheConfig) -> Result<HashMap<String, TokioAsyncResolver>, ResolverError> {
+async fn init_resolvers(config: &FaytheConfig) -> Result<HashMap<String, TokioAsyncResolver>, ResolverError> {
     let mut resolvers = HashMap::new();
 
     for z in &config.zones {

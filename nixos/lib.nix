@@ -61,7 +61,7 @@ in
                 dnsutils
               ];
 
-              environment.etc."bind/zones/${domain}.zone" = {
+              environment.etc."zones/${domain}.zone" = {
                 mode = "0644";
                 user = "named";
                 group = "named";
@@ -82,7 +82,7 @@ in
 
               services.bind.zones."${domain}" = {
                 master = true;
-                file = "/etc/bind/zones/${domain}.zone";
+                file = "/etc/zones/${domain}.zone";
                 # the bind zone module is very opinionated and this sets allow-transfer.
                 slaves = [ nodes.client.networking.primaryIPAddress ];
                 extraConfig = ''
@@ -91,7 +91,7 @@ in
               };
 
               # Hack to allow access to the directory copied from environment.etc
-              systemd.services.bind.serviceConfig.ExecStartPre = "+${pkgs.coreutils}/bin/chown named /etc/bind/zones";
+              systemd.services.bind.serviceConfig.ExecStartPre = "+${pkgs.coreutils}/bin/chown named /etc/zones";
             };
 
           client =
@@ -154,10 +154,8 @@ in
         testScript = ''
           start_all()
 
-          ns.wait_for_unit("network-online.target")
-          acme.wait_for_unit("network-online.target")
-          client.wait_for_unit("network-online.target")
-
+          acme.wait_for_unit("pebble.service")
+          client.wait_for_unit("faythe.service")
           ns.wait_for_unit("bind.service")
 
           client.wait_until_succeeds("ping -c1 ${nodes.ns.networking.primaryIPAddress}")
