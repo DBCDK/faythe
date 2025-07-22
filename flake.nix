@@ -2,9 +2,8 @@
   description = "faythe";
 
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixos-24.11";
+    nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.05";
     crane.url = "github:ipetkov/crane";
-    crane.inputs.nixpkgs.follows = "nixpkgs";
   };
 
   outputs = { self, crane, nixpkgs }:
@@ -29,8 +28,10 @@
       craneLib = crane.mkLib final;
     };
   in {
-    packages.${system}.${pname} = pkgs.${pname};
-    defaultPackage.${system} = pkgs.${pname};
+    packages.${system} = {
+	${pname} = pkgs.${pname};
+	default = pkgs.${pname};
+    };
 
     overlays.default = final: prev:
       let
@@ -77,7 +78,7 @@
       clippy = pkgs."${pname}-clippy";
     };
 
-    devShell.${system} = with pkgs; mkShell {
+    devShells.${system}.default = with pkgs; mkShell {
       buildInputs = [
         rust-analyzer
         cargo
