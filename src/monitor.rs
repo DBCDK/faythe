@@ -128,6 +128,8 @@ mod tests {
             sub_directory: None,
             cert_file_name: None,
             key_file_name: None,
+            cert_file_perms: None,
+            key_file_perms: None,
         }]
         .to_vec()
     }
