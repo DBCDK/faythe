@@ -21,6 +21,7 @@ use std::fmt::Formatter;
 use std::path::PathBuf;
 use chrono::{TimeZone, Utc};
 pub type CertName = String;
+use serde::{Deserialize, Deserializer};
 
 #[derive(Debug, Clone, Serialize)]
 pub struct CertSpec {
@@ -158,11 +159,41 @@ pub trait Persistable {
     async fn persist(&self, cert: Certificate) -> Result<(), PersistError>;
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Default, Clone, Serialize)]
 pub struct FilePersistSpec {
     pub private_key_path: PathBuf,
-    pub public_key_path: PathBuf
+    pub public_key_path: PathBuf,
+    pub cert_file_perms: Option<FilePermissions>,
+    pub key_file_perms: Option<FilePermissions>,
 }
+
+#[derive(Clone, Deserialize, Serialize, Debug)]
+pub struct FilePermissions {
+    pub user: Option<String>,
+    pub group: Option<String>,
+    #[serde(deserialize_with = "deserialize_file_mode")]
+    pub mode: Option<FileMode>,
+}
+
+#[derive(Clone, Deserialize, Serialize, Debug)]
+pub struct FileMode(pub u32);
+
+
+fn deserialize_file_mode<'de, D>(deserializer: D) -> Result<Option<FileMode>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let opt = <Option<String>>::deserialize(deserializer)?;
+    match opt {
+        Some(octal_str) => {
+            u32::from_str_radix(&octal_str, 8)
+                .map_err(serde::de::Error::custom)
+                .map(|mode| Some(FileMode(mode)))
+        }
+        None => Ok(None),
+    }
+}
+
 // We don't care about the mem use difference here because we're only using VaultPersistSpec in
 // prod, which is the largest variant anyway, so we're always paying the full cost anyway (and
 // saving ~240B per spec doesn't matter in the order of 100s of specs.)
@@ -459,6 +490,8 @@ pub mod tests {
             sub_directory: None,
             cert_file_name: None,
             key_file_name: None,
+            cert_file_perms: None,
+            key_file_perms: None,
         }
     }
 

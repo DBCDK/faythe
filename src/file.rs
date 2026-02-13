@@ -3,7 +3,7 @@ extern crate walkdir;
 
 use crate::config::{FileMonitorConfig, FaytheConfig, ConfigContainer};
 use std::collections::{HashMap, HashSet};
-use crate::common::{ValidityVerifier, CertSpecable, CertSpec, SpecError, PersistSpec, TouchError, IssueSource, FilePersistSpec, Cert, PersistError, CertName};
+use crate::common::{ValidityVerifier, CertSpecable, CertSpec, FileMode, FilePermissions, SpecError, PersistSpec, TouchError, IssueSource, FilePersistSpec, Cert, PersistError, CertName};
 use std::fs::{File, OpenOptions};
 use std::path::{Path, PathBuf};
 use acme_lib::Certificate;
@@ -13,8 +13,10 @@ use std::time::SystemTime;
 use std::os::unix::fs::PermissionsExt;
 use crate::log;
 use std::fs;
+use std::fs::Permissions;
 use self::walkdir::WalkDir;
 use std::process::Command;
+use std::process::Stdio;
 
 pub fn read_certs(config: &FileMonitorConfig) -> Result<HashMap<CertName, FileCert>, FileError> {
     let mut certs = HashMap::new();
@@ -121,6 +123,10 @@ pub struct FileSpec {
     pub cert_file_name: Option<String>,
     #[serde(default)]
     pub key_file_name: Option<String>,
+    #[serde(default)]
+    pub cert_file_perms: Option<FilePermissions>,
+    #[serde(default)]
+    pub key_file_perms: Option<FilePermissions>,
 }
 
 impl IssueSource for FileSpec {
@@ -144,6 +150,8 @@ impl CertSpecable for FileSpec {
             persist_spec: PersistSpec::File(FilePersistSpec{
                 private_key_path: absolute_file_path(monitor_config, &names, &names.key),
                 public_key_path: absolute_file_path(monitor_config, &names, &names.cert),
+                cert_file_perms: self.cert_file_perms.clone(),
+                key_file_perms: self.key_file_perms.clone(),
             }),
         })
     }
@@ -154,7 +162,7 @@ impl CertSpecable for FileSpec {
         let sub_dir = absolute_dir_path(monitor_config, names.sub_directory.as_ref());
         if names.sub_directory.is_some() && !sub_dir.exists() {
             fs::create_dir(&sub_dir)?;
-            sub_dir.metadata()?.permissions().set_mode(0o655) // rw-r-xr-x
+            sub_dir.metadata()?.permissions().set_mode(0o755) // rwxr-xr-x
         }
         let file_path = absolute_file_path(monitor_config, &names, &names.meta);
         let mut _file = OpenOptions::new().truncate(true).write(true).create(true).open(file_path)?;
@@ -216,28 +224,54 @@ pub fn persist(spec: &FilePersistSpec, cert: &Certificate) -> Result<(), Persist
     let mut priv_file = File::create(&spec.private_key_path)?;
     let pub_buf = cert.certificate().as_bytes();
     let priv_buf = cert.private_key().as_bytes();
+
+    // Ownership and permissions
+    let pub_key_permissions = Permissions::from_mode(spec.cert_file_perms.as_ref().map_or(FileMode(0o644), |p| p.mode.as_ref().map(|m| m.clone()).unwrap_or(FileMode(0o644))).0); // default: rw-r--r--
+    let priv_key_permissions = Permissions::from_mode(spec.key_file_perms.as_ref().map_or(FileMode(0o640), |p| p.mode.as_ref().map(|m| m.clone()).unwrap_or(FileMode(0o640))).0); // default: rw-r-----
+    pub_file.set_permissions(pub_key_permissions)?;
+    priv_file.set_permissions(priv_key_permissions)?;
+    if let Some(perms) = &spec.cert_file_perms {
+        if perms.user.is_some() || perms.group.is_some() {
+            chown(perms.user.as_deref(), perms.group.as_deref(), &spec.public_key_path)?;
+        }
+    }
+    if let Some(perms) = &spec.key_file_perms {
+        if perms.user.is_some() || perms.group.is_some() {
+            chown(perms.user.as_deref(), perms.group.as_deref(), &spec.private_key_path)?;
+        }
+    }
+
+    // Flush contents to files
     pub_file.write_all(pub_buf)?;
     priv_file.write_all(priv_buf)?;
-    let mut priv_permissions = priv_file.metadata()?.permissions();
-    priv_permissions.set_mode(0o640); // rw-r------
-    match spec.public_key_path.parent() {
-        Some(d) => chgrp("certpull", d), //TODO: don't hardcode group
-        None => Err(PersistError::File(FileError::IO))
-    }?;
     Ok(())
 }
 
-fn chgrp(group: &str, path: &Path) -> Result<(), PersistError> {
-    log::data("changing group for", &path.as_os_str());
+fn chown(user: Option<&str>, group: Option<&str>, path: &Path) -> Result<(), PersistError> {
+    let mut ownership_arg = user.unwrap_or("").to_string();
+    if let Some(g) = group {
+        ownership_arg.push(':');
+        ownership_arg.push_str(g);
+    }
+    log::info(&format!("changing ownership to: {} for path: {}", &ownership_arg, &path.display()));
 
-    let mut cmd = Command::new("chgrp");
-    match cmd.arg("-R")
-        .arg(group)
-        .arg(path.as_os_str())
+    let mut cmd = Command::new("chown");
+    match cmd
+        .arg(ownership_arg)
+        .arg(path)
+        .stderr(Stdio::piped())
         .output() {
 
-        Ok(_) => Ok(()),
-        Err(e) => { log::error("chgroup failed", &e); Err(PersistError::File(FileError::IO)) }
+        Ok(output) => {
+            match output.status.success() {
+                true => Ok(()),
+                false => {
+                    log::error("chown failed", &output.stderr);
+                    Err(PersistError::File(FileError::IO))
+                }
+            }
+        },
+        Err(e) => { log::error("chown failed", &e); Err(PersistError::File(FileError::IO)) }
     }
 }
 
