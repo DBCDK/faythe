@@ -21,13 +21,6 @@ use vaultrs::kv2;
 use vaultrs_login::engines::approle::AppRoleLogin;
 use vaultrs_login::LoginClient;
 
-#[derive(Debug, Deserialize, Serialize)]
-struct VaultAppRoleSecretID {
-    secret_id: String,
-    secret_id_accessor: String,
-    secret_id_ttl: u64,
-}
-
 type CertName = String;
 
 // Vault spec is parsed alongside the config, and combining fields
@@ -250,10 +243,6 @@ pub async fn login(
     Ok(client)
 }
 
-#[derive(Debug, Deserialize, Serialize)]
-struct Secret {
-    value: String,
-}
 // This trait implementation used by the issuer to persist certificates
 pub async fn persist(persist_spec: &VaultPersistSpec, cert: Certificate) -> Result<(), PersistError> {
     let client = authenticate(
