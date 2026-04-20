@@ -7,7 +7,7 @@ jobs:
     - uses: actions/checkout@v4
     - uses: cachix/install-nix-action@v30
       with:
-        nix_path: nixpkgs=channel:nixos-24.11
+        nix_path: nixpkgs=channel:nixos-25.11
     - run: nix build ./#checks.x86_64-linux.clippy
   flake-check-sample-configs:
     runs-on: ubuntu-latest
@@ -15,7 +15,7 @@ jobs:
     - uses: actions/checkout@v4
     - uses: cachix/install-nix-action@v30
       with:
-        nix_path: nixpkgs=channel:nixos-24.11
+        nix_path: nixpkgs=channel:nixos-25.11
     - run: nix build ./#checks.x86_64-linux.sample-configs
   flake-check-vault:
     runs-on: ubuntu-latest
@@ -23,7 +23,7 @@ jobs:
     - uses: actions/checkout@v4
     - uses: cachix/install-nix-action@v30
       with:
-        nix_path: nixpkgs=channel:nixos-24.11
+        nix_path: nixpkgs=channel:nixos-25.11
     - run: nix build ./#checks.x86_64-linux.vault
   flake-check-file:
     runs-on: ubuntu-latest
@@ -31,5 +31,5 @@ jobs:
     - uses: actions/checkout@v4
     - uses: cachix/install-nix-action@v30
       with:
-        nix_path: nixpkgs=channel:nixos-24.11
+        nix_path: nixpkgs=channel:nixos-25.11
     - run: nix build ./#checks.x86_64-linux.file
