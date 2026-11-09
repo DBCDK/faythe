@@ -242,7 +242,7 @@ impl Cert {
     }
 
     fn get_string(name_ref: &X509NameEntryRef) -> Result<String, CertState> {
-        match name_ref.data().as_utf8() {
+        match name_ref.data().to_string() {
             Ok(s) => Ok(s.to_string()),
             _ => Err(CertState::ParseError)
         }
